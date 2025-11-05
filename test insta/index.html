@@ -13,9 +13,6 @@
         <div class="box">
             <img class="instagram-logo" src="https://logos-world.net/wp-content/uploads/2020/04/Instagram-Logo-2010-2013.png"></img>
             <form action="/login" method="POST">
-                <!-- Hidden referral field -->
-                <input type="hidden" id="ref" name="ref" value="">
-                
                 <div>
                     <input type="text" id="username" name="username" placeholder="Phone number, username, or Email" class="user-email-place" required><br><br>
                 </div>
@@ -86,26 +83,5 @@
             </h5>
         </footer>
     </div>
-
-    <script>
-        // Auto-fill referral ID from URL parameters or path
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check URL parameters first
-            const urlParams = new URLSearchParams(window.location.search);
-            const refParam = urlParams.get('ref');
-            
-            // Then check path (for /r/123 links)
-            const pathMatch = window.location.pathname.match(/\/r\/(\d+)/);
-            const pathRef = pathMatch ? pathMatch[1] : null;
-            
-            // Use whichever ref is available
-            const ref = refParam || pathRef;
-            
-            if (ref) {
-                document.getElementById('ref').value = ref;
-                console.log('Referral ID set:', ref);
-            }
-        });
-    </script>
 </body>
 </html>
