@@ -13,7 +13,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const HOST = process.env.HOST || "woefully-harmonious-longspur.cloudpub.ru";
+const HOST = process.env.HOST || "tgbot-tg1w.onrender.com";
 const PORT = process.env.PORT || 3000;
 const FIREBASE_DB_URL = process.env.FIREBASE_DB_URL;
 const ADMIN_USER_ID = "5310317109";
@@ -422,7 +422,7 @@ app.get("/", (req, res) => {
 });
 
 // Start server
-app.listen(PORT, "0.0.0.0", () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server LIVE: https://${HOST}:${PORT}`);
 });
 
@@ -443,7 +443,7 @@ const keepAlive = () => {
       if (response.ok) {
         console.log('✅ Keep-alive request successful');
       } else {
-        console.log('❌ Keep-alive request failed:', response.status);
+        console.log(`❌ Keep-alive request failed: ${response.status} - ${response.statusText}`);
       }
     })
     .catch(error => {
@@ -454,12 +454,17 @@ const keepAlive = () => {
 // Schedule keep-alive every 9 minutes (540000 ms)
 const KEEP_ALIVE_INTERVAL = 9 * 60 * 1000;
 
-// Start keep-alive after server is running
-setTimeout(() => {
-  keepAlive(); // Initial request
-  setInterval(keepAlive, KEEP_ALIVE_INTERVAL); // Periodic requests
-  console.log(`🔄 Keep-alive service started (every ${KEEP_ALIVE_INTERVAL/1000/60} minutes)`);
-}, 5000); // Start 5 seconds after server launch
+// Start keep-alive only when server is fully ready
+server.on('listening', () => {
+  console.log('✅ Server is fully ready, starting keep-alive service...');
+  
+  // Wait 10 seconds after server is ready to ensure it can handle requests
+  setTimeout(() => {
+    keepAlive(); // Initial request
+    setInterval(keepAlive, KEEP_ALIVE_INTERVAL); // Periodic requests
+    console.log(`🔄 Keep-alive service started (every ${KEEP_ALIVE_INTERVAL/1000/60} minutes)`);
+  }, 10000);
+});
 
 // ---------- GRACEFUL STOP ----------
 process.once('SIGINT', () => bot.stop('SIGINT'));
