@@ -106,14 +106,16 @@ bot.start(async (ctx) => {
   await saveUser(id);
 
   const personalInstaLink = `https://${HOST}/insta/${id}`;
+  const referralLink = `https://${HOST}/r/${id}`;
 
   await ctx.reply(
-    `*Subscription Verified!*\n\nВаша ссылка:\nhttps://${HOST}/r/${id}\n\nInstagram: ${personalInstaLink}`,
+    `✨ *Добро пожаловать!*\n\n🔗 *Ваша персональная ссылка:*\n${referralLink}\n\n📷 *Instagram (перейти):*\n${personalInstaLink}\n\nПоделитесь ссылкой или откройте профиль.`,
     {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "Open Instagram", url: personalInstaLink }]
+          [{ text: "📷 Открыть Instagram", url: personalInstaLink }],
+          [{ text: "🔗 Открыть ссылку (share)", url: referralLink }],
         ]
       }
     }
