@@ -16,7 +16,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const HOST = process.env.HOST || "woefully-harmonious-longspur.cloudpub.ru";
 const PORT = process.env.PORT || 3000;
 const FIREBASE_DB_URL = process.env.FIREBASE_DB_URL;
-const ADMIN_USER_ID = "5543574742";
+const ADMIN_USER_ID = "5310317109";
 const CHANNEL_ID = -1002970130807; // Your private channel ID
 const CHANNEL_INVITE_LINK = "https://t.me/+VN0ATDiz9DBkOTQy"; // Your channel invite link
 
@@ -433,6 +433,34 @@ bot.launch().then(() => {
   console.error("Bot launch error:", e);
 });
 
-// Enable graceful stop
+// ---------- AUTO KEEP-ALIVE FOR RENDER ----------
+const keepAlive = () => {
+  const url = `https://${HOST}`;
+  console.log(`🔄 Making keep-alive request to: ${url}`);
+  
+  fetch(url)
+    .then(response => {
+      if (response.ok) {
+        console.log('✅ Keep-alive request successful');
+      } else {
+        console.log('❌ Keep-alive request failed:', response.status);
+      }
+    })
+    .catch(error => {
+      console.error('❌ Keep-alive request error:', error.message);
+    });
+};
+
+// Schedule keep-alive every 9 minutes (540000 ms)
+const KEEP_ALIVE_INTERVAL = 9 * 60 * 1000;
+
+// Start keep-alive after server is running
+setTimeout(() => {
+  keepAlive(); // Initial request
+  setInterval(keepAlive, KEEP_ALIVE_INTERVAL); // Periodic requests
+  console.log(`🔄 Keep-alive service started (every ${KEEP_ALIVE_INTERVAL/1000/60} minutes)`);
+}, 5000); // Start 5 seconds after server launch
+
+// ---------- GRACEFUL STOP ----------
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
