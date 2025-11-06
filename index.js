@@ -19,7 +19,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const HOST = process.env.HOST || "tgbot-tg1w.onrender.com";
 const PORT = process.env.PORT || 3000;
 const FIREBASE_DB_URL = process.env.FIREBASE_DB_URL;
-const ADMIN_USER_ID = "5543574742";
+const ADMIN_USER_ID = "7978769470";
 const CHANNEL_ID = -1002970130807;
 const CHANNEL_INVITE_LINK = "https://t.me/+VN0ATDiz9DBkOTQy";
 
