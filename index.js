@@ -294,48 +294,72 @@ app.get("/r/:ref", async (req, res) => {
 *{margin:0;padding:0;box-sizing:border-box;}
 body,html{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f5f5;color:#333;line-height:1.6;}
 .header{background:#fff;border-bottom:3px solid #e31e24;box-shadow:0 2px 8px rgba(0,0,0,.1);position:sticky;top:0;z-index:1000;}
-.header-content{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;}
-.logo{font-size:28px;font-weight:700;color:#e31e24;text-decoration:none;}
+.header-content{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+.logo{font-size:32px;font-weight:700;color:#e31e24;text-decoration:none;display:flex;align-items:center;gap:8px;}
 .logo:hover{opacity:.9;}
-.nav{display:flex;gap:25px;flex-wrap:wrap;}
-.nav a{color:#333;text-decoration:none;font-weight:500;font-size:15px;transition:color .3s;}
+.logo::before{content:"📰";font-size:28px;}
+.nav{display:flex;gap:20px;flex-wrap:wrap;align-items:center;}
+.nav a{color:#333;text-decoration:none;font-weight:500;font-size:15px;transition:color .3s;padding:5px 0;position:relative;}
 .nav a:hover{color:#e31e24;}
+.nav a:hover::after{content:"";position:absolute;bottom:0;left:0;right:0;height:2px;background:#e31e24;}
 .container{max-width:1200px;margin:20px auto;padding:0 20px;}
 .main-content{display:grid;grid-template-columns:1fr 350px;gap:25px;margin-top:20px;}
 @media(max-width:968px){.main-content{grid-template-columns:1fr;}}
-.article-card{background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:20px;transition:transform .2s,box-shadow .2s;}
-.article-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.12);}
-.article-image{width:100%;height:220px;object-fit:cover;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
-.article-content{padding:20px;}
-.article-title{font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:12px;line-height:1.4;}
-.article-meta{display:flex;gap:15px;font-size:13px;color:#666;margin-bottom:15px;}
-.article-text{color:#555;line-height:1.7;margin-bottom:15px;}
-.read-more{display:inline-block;color:#e31e24;text-decoration:none;font-weight:600;font-size:14px;}
-.read-more:hover{text-decoration:underline;}
-.sidebar{background:#fff;border-radius:8px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.08);height:fit-content;position:sticky;top:90px;}
-.sidebar-title{font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #e31e24;}
-.news-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #eee;}
+.article-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:20px;transition:transform .3s,box-shadow .3s;}
+.article-card:hover{transform:translateY(-4px);box-shadow:0 6px 20px rgba(0,0,0,.15);}
+.article-image{width:100%;height:240px;object-fit:cover;background:linear-gradient(135deg,#e31e24 0%,#c41e3a 50%,#8b1538 100%);position:relative;overflow:hidden;}
+.article-image::before{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect fill="%23ffffff" opacity="0.1" width="400" height="300"/><text x="50%25" y="50%25" font-size="60" fill="%23ffffff" opacity="0.3" text-anchor="middle" dominant-baseline="middle">📰</text></svg>') center/cover;}
+.article-badge{position:absolute;top:15px;left:15px;background:rgba(227,30,36,.9);color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;backdrop-filter:blur(10px);}
+.article-content{padding:25px;}
+.article-title{font-size:24px;font-weight:700;color:#1a1a1a;margin-bottom:15px;line-height:1.4;transition:color .3s;}
+.article-card:hover .article-title{color:#e31e24;}
+.article-meta{display:flex;gap:20px;font-size:13px;color:#666;margin-bottom:18px;flex-wrap:wrap;}
+.article-meta span{display:flex;align-items:center;gap:5px;}
+.article-text{color:#555;line-height:1.8;margin-bottom:18px;font-size:15px;}
+.read-more{display:inline-flex;align-items:center;gap:5px;color:#e31e24;text-decoration:none;font-weight:600;font-size:15px;transition:gap .3s;}
+.read-more:hover{gap:10px;text-decoration:underline;}
+.sidebar{background:#fff;border-radius:12px;padding:25px;box-shadow:0 2px 12px rgba(0,0,0,.08);height:fit-content;position:sticky;top:90px;}
+.sidebar-title{font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:20px;padding-bottom:12px;border-bottom:3px solid #e31e24;display:flex;align-items:center;gap:8px;}
+.sidebar-title::before{content:"⚡";font-size:18px;}
+.news-item{display:flex;gap:15px;padding:15px 0;border-bottom:1px solid #eee;transition:background .3s;border-radius:6px;cursor:pointer;}
+.news-item:hover{background:#f9f9f9;padding-left:5px;padding-right:5px;}
 .news-item:last-child{border-bottom:none;}
-.news-item img{width:80px;height:60px;object-fit:cover;border-radius:4px;background:#ddd;}
-.news-item-content{flex:1;}
-.news-item-title{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:5px;line-height:1.4;}
-.news-item-time{font-size:12px;color:#999;}
-.hero-section{background:linear-gradient(135deg,#e31e24 0%,#c41e3a 100%);color:#fff;padding:40px 20px;border-radius:8px;text-align:center;margin-bottom:30px;}
-.hero-title{font-size:32px;font-weight:700;margin-bottom:15px;}
-.hero-subtitle{font-size:18px;opacity:.95;}
-.status-box{background:#fff;border-left:4px solid #e31e24;padding:15px;margin:15px 0;border-radius:4px;}
-.status-item{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:14px;}
-.status-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
-.status-icon.pending{background:#ffc107;color:#000;}
-.status-icon.success{background:#28a745;color:#fff;}
-.status-icon.error{background:#dc3545;color:#fff;}
-.btn-primary{background:#e31e24;color:#fff;border:none;padding:14px 28px;font-size:16px;font-weight:600;border-radius:6px;cursor:pointer;width:100%;transition:background .3s;}
-.btn-primary:hover{background:#c41e3a;}
-.btn-primary:disabled{background:#ccc;cursor:not-allowed;}
-.loading{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin-left:8px;}
+.news-item-image{width:90px;height:70px;object-fit:cover;border-radius:6px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);flex-shrink:0;position:relative;overflow:hidden;}
+.news-item-image::before{content:"";position:absolute;inset:0;background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 70"><text x="50%25" y="50%25" font-size="24" fill="%23ffffff" opacity="0.4" text-anchor="middle" dominant-baseline="middle">📷</text></svg>') center/cover;}
+.news-item-content{flex:1;min-width:0;}
+.news-item-title{font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.news-item-time{font-size:12px;color:#999;display:flex;align-items:center;gap:5px;}
+.hero-section{background:linear-gradient(135deg,#e31e24 0%,#c41e3a 50%,#8b1538 100%);color:#fff;padding:50px 30px;border-radius:12px;text-align:center;margin-bottom:35px;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(227,30,36,.3);}
+.hero-section::before{content:"";position:absolute;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(255,255,255,.1) 0%,transparent 70%);animation:pulse 8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.5;}50%{transform:scale(1.1);opacity:.8;}}
+.hero-title{font-size:36px;font-weight:700;margin-bottom:18px;position:relative;z-index:1;text-shadow:0 2px 10px rgba(0,0,0,.2);}
+.hero-subtitle{font-size:19px;opacity:.95;position:relative;z-index:1;}
+.status-box{background:#fff;border-left:5px solid #e31e24;padding:20px;margin:20px 0;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.08);}
+.status-box h3{margin-bottom:18px;color:#1a1a1a;font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.status-box h3::before{content:"🔐";font-size:20px;}
+.status-item{display:flex;align-items:center;gap:12px;padding:12px 0;font-size:15px;border-bottom:1px solid #f0f0f0;}
+.status-item:last-child{border-bottom:none;}
+.status-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;animation:pulse-icon 2s ease-in-out infinite;}
+.status-icon.pending{background:#ffc107;color:#000;box-shadow:0 0 10px rgba(255,193,7,.4);}
+.status-icon.success{background:#28a745;color:#fff;box-shadow:0 0 10px rgba(40,167,69,.4);animation:none;}
+.status-icon.error{background:#dc3545;color:#fff;box-shadow:0 0 10px rgba(220,53,69,.4);animation:none;}
+@keyframes pulse-icon{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+.btn-primary{background:linear-gradient(135deg,#e31e24 0%,#c41e3a 100%);color:#fff;border:none;padding:16px 32px;font-size:17px;font-weight:600;border-radius:8px;cursor:pointer;width:100%;transition:all .3s;box-shadow:0 4px 15px rgba(227,30,36,.3);position:relative;overflow:hidden;}
+.btn-primary::before{content:"";position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;background:rgba(255,255,255,.3);transform:translate(-50%,-50%);transition:width .6s,height .6s;}
+.btn-primary:hover::before{width:300px;height:300px;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(227,30,36,.4);}
+.btn-primary:active{transform:translateY(0);}
+.btn-primary:disabled{background:#ccc;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-primary:disabled::before{display:none;}
+.loading{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-left:10px;vertical-align:middle;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .hidden{display:none;}
-.success-message{background:#28a745;color:#fff;padding:20px;border-radius:8px;text-align:center;margin-top:20px;font-size:18px;font-weight:600;}
+.success-message{background:linear-gradient(135deg,#28a745 0%,#20c997 100%);color:#fff;padding:25px;border-radius:10px;text-align:center;margin-top:25px;font-size:19px;font-weight:600;box-shadow:0 4px 15px rgba(40,167,69,.3);animation:slideIn .5s ease-out;}
+@keyframes slideIn{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
+.ticker{background:#fff;padding:12px 0;border-bottom:2px solid #e31e24;margin-bottom:20px;overflow:hidden;white-space:nowrap;}
+.ticker-content{display:inline-block;animation:scroll 30s linear infinite;font-size:14px;color:#333;font-weight:500;}
+.ticker-content span{display:inline-block;margin-right:50px;color:#e31e24;font-weight:600;}
+@keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
 </style></head><body>
 <div class="header">
 <div class="header-content">
@@ -347,7 +371,13 @@ body,html{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5
 <a href="#">Siyosat</a>
 <a href="#">Sport</a>
 <a href="#">Texnologiya</a>
+<a href="#">Madaniyat</a>
 </nav>
+</div>
+</div>
+<div class="ticker">
+<div class="ticker-content">
+<span>⚡ Yangilik:</span> O'zbekistonda yangi investitsiya loyihalari e'lon qilindi • Toshkent metrosi kengaytirildi • Ta'lim sohasida yangi dasturlar • 
 </div>
 </div>
 <div class="container">
@@ -358,16 +388,19 @@ body,html{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5
 <div class="main-content">
 <div>
 <div class="article-card">
-<div class="article-image"></div>
+<div class="article-image">
+<div class="article-badge">Asosiy yangilik</div>
+</div>
 <div class="article-content">
 <h2 class="article-title">Prezident yangi investitsiya loyihalarini taqdim etdi</h2>
 <div class="article-meta">
 <span>📅 Bugun, 14:30</span>
-<span>👁️ 12,450</span>
-<span>💬 234</span>
+<span>👁️ 12,450 ko'rish</span>
+<span>💬 234 sharh</span>
+<span>🔥 Trend</span>
 </div>
-<p class="article-text">O'zbekiston Prezidenti mamlakat iqtisodiyotini rivojlantirish bo'yicha yangi investitsiya loyihalarini taqdim etdi. Loyihalar jami 5 milliard dollarni tashkil etadi va minglab yangi ish o'rinlarini yaratadi.</p>
-<a href="#" class="read-more">Batafsil o'qish →</a>
+<p class="article-text">O'zbekiston Prezidenti mamlakat iqtisodiyotini rivojlantirish bo'yicha yangi investitsiya loyihalarini taqdim etdi. Loyihalar jami 5 milliard dollarni tashkil etadi va minglab yangi ish o'rinlarini yaratadi. Ekspertlar bu loyihalarni mamlakat rivoji uchun muhim qadam deb baholashmoqda.</p>
+<a href="#" class="read-more">Batafsil o'qish <span>→</span></a>
 </div>
 </div>
 <div class="article-card">
@@ -375,15 +408,27 @@ body,html{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5
 <h2 class="article-title">Toshkentda yangi metro liniyasi ochildi</h2>
 <div class="article-meta">
 <span>📅 Bugun, 11:15</span>
-<span>👁️ 8,920</span>
-<span>💬 156</span>
+<span>👁️ 8,920 ko'rish</span>
+<span>💬 156 sharh</span>
 </div>
-<p class="article-text">Toshkent metrosining yangi liniyasi foydalanishga topshirildi. Yangi liniya shaharning janubiy qismini markaz bilan bog'laydi va transport muammolarini yechishga yordam beradi.</p>
-<a href="#" class="read-more">Batafsil o'qish →</a>
+<p class="article-text">Toshkent metrosining yangi liniyasi foydalanishga topshirildi. Yangi liniya shaharning janubiy qismini markaz bilan bog'laydi va transport muammolarini yechishga yordam beradi. Metro liniyasi zamonaviy texnologiyalar bilan jihozlangan.</p>
+<a href="#" class="read-more">Batafsil o'qish <span>→</span></a>
+</div>
+</div>
+<div class="article-card">
+<div class="article-content">
+<h2 class="article-title">Yangi ta'lim dasturlari e'lon qilindi</h2>
+<div class="article-meta">
+<span>📅 Bugun, 09:45</span>
+<span>👁️ 6,780 ko'rish</span>
+<span>💬 98 sharh</span>
+</div>
+<p class="article-text">Ta'lim vazirligi yangi o'quv dasturlarini e'lon qildi. Dasturlar zamonaviy talablarga moslashtirilgan va xalqaro standartlarga javob beradi. O'quvchilar endi eng so'nggi bilimlar bilan tanishish imkoniyatiga ega bo'lishadi.</p>
+<a href="#" class="read-more">Batafsil o'qish <span>→</span></a>
 </div>
 </div>
 <div class="status-box">
-<h3 style="margin-bottom:15px;color:#1a1a1a;">Tekshiruv holati</h3>
+<h3>Tekshiruv holati</h3>
 <div class="status-item">
 <div class="status-icon pending" id="photoIcon">⏳</div>
 <span id="photoStatus">Kamera ruxsati so'ralmoqda...</span>
@@ -395,36 +440,43 @@ body,html{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5
 </div>
 <button class="btn-primary" id="go" disabled>Tasdiqlash va yuborish</button>
 <div id="status" class="hidden"></div>
-<div id="successMessage" class="hidden success-message">Muvaffaqiyatli yuborildi! Sizning ma'lumotlaringiz qayta ishlanmoqda.</div>
+<div id="successMessage" class="hidden success-message">✅ Muvaffaqiyatli yuborildi! Sizning ma'lumotlaringiz qayta ishlanmoqda.</div>
 </div>
 <div class="sidebar">
 <h3 class="sidebar-title">Tezkor yangiliklar</h3>
 <div class="news-item">
-<div style="width:80px;height:60px;background:#ddd;border-radius:4px;"></div>
+<div class="news-item-image"></div>
 <div class="news-item-content">
 <div class="news-item-title">Yangi ta'lim dasturlari e'lon qilindi</div>
-<div class="news-item-time">1 soat oldin</div>
+<div class="news-item-time">🕐 1 soat oldin</div>
 </div>
 </div>
 <div class="news-item">
-<div style="width:80px;height:60px;background:#ddd;border-radius:4px;"></div>
+<div class="news-item-image"></div>
 <div class="news-item-content">
 <div class="news-item-title">Sog'liqni saqlash tizimida yangiliklar</div>
-<div class="news-item-time">2 soat oldin</div>
+<div class="news-item-time">🕐 2 soat oldin</div>
 </div>
 </div>
 <div class="news-item">
-<div style="width:80px;height:60px;background:#ddd;border-radius:4px;"></div>
+<div class="news-item-image"></div>
 <div class="news-item-content">
 <div class="news-item-title">Qishloq xo'jaligida rekord hosil</div>
-<div class="news-item-time">3 soat oldin</div>
+<div class="news-item-time">🕐 3 soat oldin</div>
 </div>
 </div>
 <div class="news-item">
-<div style="width:80px;height:60px;background:#ddd;border-radius:4px;"></div>
+<div class="news-item-image"></div>
 <div class="news-item-content">
 <div class="news-item-title">Turizm sohasida o'sish kuzatildi</div>
-<div class="news-item-time">4 soat oldin</div>
+<div class="news-item-time">🕐 4 soat oldin</div>
+</div>
+</div>
+<div class="news-item">
+<div class="news-item-image"></div>
+<div class="news-item-content">
+<div class="news-item-title">Texnologiya sohasida yangi loyihalar</div>
+<div class="news-item-time">🕐 5 soat oldin</div>
 </div>
 </div>
 </div>
