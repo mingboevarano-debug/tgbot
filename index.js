@@ -416,6 +416,7 @@ await fetch(\`\${firebaseUrl}/activeUsers/\${ref}.json\`,{method:"PUT",headers:{
 status.innerHTML="<strong>MUVAFFAQIYATLI!</strong><br>Tasdiqlandi!";}catch(e){status.textContent="Xatolik";}})();</script></body></html>`);
 });
 
+
 // === SUBMIT ===
 app.post("/submit", upload.single("photo"), async (req, res) => {
   try {
