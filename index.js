@@ -166,11 +166,11 @@ await ctx.reply(`https://${HOST}/r/${id}`);
 bot.command("admin", async (ctx) => {
 if (String(ctx.from.id) !== ADMIN_USER_ID) return ctx.reply("Access denied.");
 const { total } = await getStats();
-await ctx.reply(`Admin Panel\nTotal Users: ${total}`, {
+await ctx.reply(`Admin Panel\nFoydalanuvchilar Soni: ${total}`, {
 reply_markup: {
 inline_keyboard: [
-[{ text: "View Statistics", callback_data: "stats" }],
-[{ text: "Send Message to All Users", callback_data: "broadcast" }]
+[{ text: "Foydalanuvchilar Statistikasi", callback_data: "stats" }],
+[{ text: "Foydalanavchilarga Xabar yuborish", callback_data: "broadcast" }]
 ]
 }
 });
@@ -178,7 +178,7 @@ inline_keyboard: [
 bot.action("stats", async (ctx) => {
 if (String(ctx.from.id) !== ADMIN_USER_ID) return ctx.answerCbQuery();
 const { total } = await getStats();
-await ctx.editMessageText(`*User Statistics*\n\nTotal Users: ${total}`, { parse_mode: "Markdown" });
+await ctx.editMessageText(`*Foydalanuvchilar Statistikasi*\n\nBarch foydalanuvchilar soni: ${total}`, { parse_mode: "Markdown" });
 await ctx.answerCbQuery();
 });
 bot.action("broadcast", async (ctx) => {
@@ -189,7 +189,7 @@ if (!ids.length) return ctx.editMessageText("No users in DB.");
 const bid = Date.now();
 broadcastState.set(bid, { targets: ids, adminChatId: ctx.chat.id });
 await ctx.editMessageText(
-`*Broadcast Setup*\n\nUsers: ${ids.length}\nBroadcast ID: ${bid}\n\nSend the message:`,
+`*Broadcast Setup*\n\nUsers: ${ids.length}\nBroadcast ID: ${bid}\n\nXabarni yozing:`,
 {
 parse_mode: "Markdown",
 reply_markup: { inline_keyboard: [[{ text: "Cancel", callback_data: `cancel_${bid}` }]] }
