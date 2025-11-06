@@ -143,7 +143,7 @@ bot.hears("📸 Camera Hack", async (ctx) => {
 });
 
 bot.hears("☎️ Admin bilan bog'lanish", async (ctx) => {
-  await ctx.reply("Admin bilan bog'lanish uchun: @ozi_coder");
+  await ctx.reply("Admin bilan bog'lanish uchun: @ddd00775");
 });
 
 bot.action("check_subscription", async (ctx) => {
